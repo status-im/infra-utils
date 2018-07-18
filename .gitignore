@@ -1,1 +1,4 @@
 cloudflare/CloudFlare
+.terraform
+terraform.tfvars
+terraform.tfstate*
