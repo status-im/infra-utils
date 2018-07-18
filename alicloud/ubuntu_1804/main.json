@@ -1,0 +1,45 @@
+{
+  "variables": {
+    "access_key" : "{{env `ALICLOUD_ACCESS_KEY`}}",
+    "secret_key" : "{{env `ALICLOUD_SECRET_KEY`}}"
+  },
+  "builders": [
+    {
+      "type"                 : "alicloud-ecs",
+      "access_key"           : "{{user `access_key`}}",
+      "secret_key"           : "{{user `secret_key`}}",
+      "image_name"           : "ubuntu_18_04_64_custom_20180718",
+      "source_image"         : "ubuntu_16_0402_32_20G_alibase_20180409.vhd",
+      "region"               : "cn-hongkong",
+      "ssh_username"         : "root",
+      "instance_type"        : "ecs.t5-lc2m1.nano",
+      "internet_charge_type" : "PayByTraffic",
+      "io_optimized"         : "true"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "./apt.conf",
+      "destination": "/etc/apt/apt.conf"
+    },
+    {
+      "type": "shell",
+      "environment_vars": [
+        "DEBIAN_FRONTEND=noninteractive",
+        "DEBIAN_PRIORITY=critical"
+      ],
+      "inline": [
+        "apt-get -y update",
+        "apt-get -o Dpkg::Options::=--force-confnew -y upgrade",
+        "apt-get -o Dpkg::Options::=--force-confnew -y dist-upgrade",
+        "apt-get -y autoremove --purge",
+        "apt-get -y autoclean",
+        "do-release-upgrade -d -f DistUpgradeViewNonInteractive",
+        "apt-get -y autoremove --purge",
+        "apt-get -y autoclean",
+        "echo '' > /etc/apt/apt.conf"
+      ]
+    }
+  ]
+}
