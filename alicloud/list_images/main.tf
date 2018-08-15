@@ -5,8 +5,8 @@ provider "alicloud" {
 }
 
 data "alicloud_images" "ubuntu" {
-  owners = "marketplace"
-  name_regex = ".*"
+  owners = "system"
+  name_regex = "ubuntu"
 }
 
 /*
