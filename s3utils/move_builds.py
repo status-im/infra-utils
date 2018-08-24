@@ -4,6 +4,7 @@ import boto3
 import botocore
 
 BUCKET = 'status-im-desktop'
+NEW_BUCKET = 'status-im'
 
 session = boto3.session.Session()
 s3 = session.client('s3',
@@ -23,4 +24,4 @@ for f in s3.list_objects_v2(Bucket=BUCKET)['Contents']:
     print('{:<25} -> {}'.format(name, new_name))
     path = '/tmp/{}'.format(new_name)
     s3.download_file(BUCKET, name, path)
-    s3.upload_file(path, BUCKET, new_name)
+    s3.upload_file(path, NEW_BUCKET, new_name)
