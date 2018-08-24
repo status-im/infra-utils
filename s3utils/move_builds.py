@@ -22,5 +22,5 @@ for f in s3.list_objects_v2(Bucket=BUCKET)['Contents']:
     )
     print('{:<25} -> {}'.format(name, new_name))
     path = '/tmp/{}'.format(new_name)
-    #s3.download_file(BUCKET, name, path)
-    #s3.upload_file(path, BUCKET, new_name)
+    s3.download_file(BUCKET, name, path)
+    s3.upload_file(path, BUCKET, new_name)
