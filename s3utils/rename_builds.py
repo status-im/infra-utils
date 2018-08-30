@@ -21,5 +21,6 @@ for f in s3.list_objects_v2(Bucket=BUCKET)['Contents']:
     dots = name.count('.')
     new_name = name.replace('.', '-', dots-1)
     print('{:<30} -> {}'.format(name, new_name))
+    # WARNING: This does not copy ACL rules!
     s3.copy({'Bucket': BUCKET, 'Key': name}, BUCKET, new_name)
     s3.delete_object(Bucket=BUCKET, Key=name)
