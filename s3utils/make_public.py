@@ -5,8 +5,6 @@ import botocore
 
 bucket_name = 'status-im'
 
-session = boto3.session.Session()
-
 s3 = boto3.resource(
     's3',
     region_name='ams3',
