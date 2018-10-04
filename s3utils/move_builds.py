@@ -15,13 +15,13 @@ s3 = session.client('s3',
 
 for f in s3.list_objects_v2(Bucket=SRC_BUCKET)['Contents']:
     name = f['Key']
-    when = f['LastModified']
-    new_name = 'StatusIm.{}.{}.nightly.{}'.format(
-        when.strftime('%y%m%d.%H%M%S'),
-        name[9:15],
-        name.split('.')[-1]
-    )
-    print('{:<25} -> {}'.format(name, new_name))
-    path = '/tmp/{}'.format(new_name)
+    # ignore is build is not a pr
+    if 'pr' != name.split('-')[-1].split('.')[0]:
+        continue
+    print('{:<25} {} -> {}'.format(name, SRC_BUCKET, DST_BUCKET))
+    path = '/tmp/{}'.format(name)
     s3.download_file(SRC_BUCKET, name, path)
-    s3.upload_file(path, DST_BUCKET, new_name)
+    s3.upload_file(path, DST_BUCKET, name)
+    s3.delete_object(Bucket=SRC_BUCKET, Key=name)
+    os.remove(path)
+    break
