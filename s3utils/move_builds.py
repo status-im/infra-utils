@@ -3,8 +3,8 @@ import os
 import boto3
 import botocore
 
-BUCKET = 'status-im-desktop'
-NEW_BUCKET = 'status-im'
+SRC_BUCKET = 'status-im'
+DST_BUCKET = 'status-im-prs'
 
 session = boto3.session.Session()
 s3 = session.client('s3',
@@ -13,7 +13,7 @@ s3 = session.client('s3',
                     aws_access_key_id=os.environ['DO_ID'],
                     aws_secret_access_key=os.environ['DO_SECRET'])
 
-for f in s3.list_objects_v2(Bucket=BUCKET)['Contents']:
+for f in s3.list_objects_v2(Bucket=SRC_BUCKET)['Contents']:
     name = f['Key']
     when = f['LastModified']
     new_name = 'StatusIm.{}.{}.nightly.{}'.format(
@@ -23,5 +23,5 @@ for f in s3.list_objects_v2(Bucket=BUCKET)['Contents']:
     )
     print('{:<25} -> {}'.format(name, new_name))
     path = '/tmp/{}'.format(new_name)
-    s3.download_file(BUCKET, name, path)
-    s3.upload_file(path, NEW_BUCKET, new_name)
+    s3.download_file(SRC_BUCKET, name, path)
+    s3.upload_file(path, DST_BUCKET, new_name)
