@@ -16,5 +16,9 @@ RUN cd /tmp && \
     mv livepeer_linux/* /usr/bin/ && \
     rm -r ${LIVEPEER_ARCHIVE} livepeer_linux
 
-ENTRYPOINT /usr/bin/livepeer_cli
+# folder for LivePeer data
+VOLUME /root/.lpData
+
+WORKDIR /tmp
+ENTRYPOINT /usr/bin/livepeer
 CMD ["--help"]
