@@ -20,5 +20,5 @@ RUN cd /tmp && \
 VOLUME /root/.lpData
 
 WORKDIR /tmp
-ENTRYPOINT /usr/bin/livepeer
+ENTRYPOINT ["/usr/bin/livepeer"]
 CMD ["--help"]
