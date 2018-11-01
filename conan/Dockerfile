@@ -23,5 +23,7 @@ LABEL source="https://github.com/status-im/infra-utils"
 LABEL description="Conan server repository service"
 LABEL maintainer="jakub@status.im"
 
+WORKDIR /var/lib/conan
+
 COPY ./entrypoint.sh /entrypoint.sh
 CMD ["/bin/sh", "/entrypoint.sh"]
