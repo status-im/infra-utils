@@ -2,30 +2,10 @@
 import os
 import json
 import CloudFlare
+from optparse import OptionParser
 
-email = 'jakub@status.im'
-token = os.environ['CF_TOKEN']
-
-cf = CloudFlare.CloudFlare(email, token)
-
-#zones = cf.zones.get(params = {'per_page':100})
-#zone_id = zones[0]['id']
-#zone_name = zones[0]['id']
-#print('Zones:', [z['name'] for z in zones])
-
-logs = cf.organizations.audit_logs.get('113ef908d19933ef327f079a3def53fc',
-    params={
-        'since': '2018-01-01',
-        'per_page': 5000,
-        'order': 'when',
-        'direction': 'asc',
-        'zone.name': 'status.im'
-    }
-)
-for log in logs:
-    if log['action']['type'] not in ['add', 'delete']:
-        continue
-    print('{:30} {:20} {:12} {:>10} {:>7} {:30} {}'.format(
+def format_log(log):
+    return '{:30} {:20} {:12} {:>10} {:>7} {:30} {}'.format(
         log['when'],
         log['actor'].get('email', log['metadata'].get('acted_on_behalf_of')),
         log['metadata'].get('zone_name'),
@@ -33,4 +13,49 @@ for log in logs:
         log['metadata'].get('type') or '',
         log['metadata'].get('name') or '',
         log['metadata'].get('content') or ''
-    ))
+    )
+
+def parse_opts():
+    parser = OptionParser()
+    parser.add_option('-m', '--mail', dest='cf_email', default='jakub@status.im',
+                      help='CloudFlare Account email for auth.')
+    parser.add_option('-t', '--token', dest='cf_token', default=os.environ['CF_TOKEN'],
+                      help='CloudFlare API token for auth.')
+    parser.add_option('-o', '--organiation', dest='cf_org_id', default='113ef908d19933ef327f079a3def53fc',
+                      help='Specify which CloudFlare organization to query.')
+    parser.add_option('-d', '--domain', dest='cf_domain', default='status.im',
+                      help='Specify which domain to query for.')
+    parser.add_option('-b', '--before',
+                      help='Query logs before this date. (ex: "2018-12-30")')
+    parser.add_option('-s', '--since',
+                      help='Query logs since this date. (ex: "2018-01-01")')
+    parser.add_option('-a', '--actions', action='append', default=['add', 'delete'],
+                      help='Specify which CloudFlare actions to list.')
+    
+    return parser.parse_args()
+
+def main():
+    (opts, args) = parse_opts()
+
+    cf = CloudFlare.CloudFlare(opts.cf_email, opts.cf_token)
+
+    params = {
+        'per_page': 5000,
+        'order': 'when',
+        'direction': 'asc',
+        'zone.name': opts.cf_domain,
+    }
+    if opts.before:
+        params['before'] = opts.before
+    if opts.since:
+        params['since'] = opts.since
+    
+    logs = cf.organizations.audit_logs.get(opts.cf_org_id, params=params)
+
+    for log in logs:
+        if log['action']['type'] not in opts.actions:
+            continue
+        print(format_log(log))
+
+if __name__ == '__main__':
+    main()
