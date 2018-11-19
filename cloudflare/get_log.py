@@ -5,7 +5,7 @@ import CloudFlare
 from optparse import OptionParser
 
 HELP_DESCRIPTION='This is a simple utility for querying CloudFlare for audit logs.'
-HELP_EXAMPLE='Example: ./get_log.py -s 2018-10-01 -a update'
+HELP_EXAMPLE='Example: ./get_log.py -s 2018-10-01 -a delete'
 
 def format_log(log):
     return '{:30} {:20} {:12} {:>10} {:>7} {:30} {}'.format(
@@ -28,7 +28,7 @@ def parse_opts():
                       help='Specify which CloudFlare organization to query. (default: %default)')
     parser.add_option('-d', '--domain', dest='cf_domain', default='status.im',
                       help='Specify which domain to query for. (default: %default)')
-    parser.add_option('-a', '--actions', action='append', default=['add', 'delete'],
+    parser.add_option('-a', '--actions', action='append', default=['add'],
                       help='Specify which CloudFlare actions to list. (default: %default)')
     parser.add_option('-b', '--before',
                       help='Query logs before this date. (ex: "2018-12-30")')
