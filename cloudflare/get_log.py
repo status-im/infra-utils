@@ -4,6 +4,9 @@ import json
 import CloudFlare
 from optparse import OptionParser
 
+HELP_DESCRIPTION='This is a simple utility for querying CloudFlare for audit logs.'
+HELP_EXAMPLE='Example: ./get_log.py -s 2018-10-01 -a update'
+
 def format_log(log):
     return '{:30} {:20} {:12} {:>10} {:>7} {:30} {}'.format(
         log['when'],
@@ -16,21 +19,21 @@ def format_log(log):
     )
 
 def parse_opts():
-    parser = OptionParser()
+    parser = OptionParser(description=HELP_DESCRIPTION, epilog=HELP_EXAMPLE)
     parser.add_option('-m', '--mail', dest='cf_email', default='jakub@status.im',
-                      help='CloudFlare Account email for auth.')
+                      help='CloudFlare Account email for auth. (default: %default)')
     parser.add_option('-t', '--token', dest='cf_token', default=os.environ['CF_TOKEN'],
-                      help='CloudFlare API token for auth.')
+                      help='CloudFlare API token for auth (env CF_TOKEN used). (default: %default)')
     parser.add_option('-o', '--organiation', dest='cf_org_id', default='113ef908d19933ef327f079a3def53fc',
-                      help='Specify which CloudFlare organization to query.')
+                      help='Specify which CloudFlare organization to query. (default: %default)')
     parser.add_option('-d', '--domain', dest='cf_domain', default='status.im',
-                      help='Specify which domain to query for.')
+                      help='Specify which domain to query for. (default: %default)')
+    parser.add_option('-a', '--actions', action='append', default=['add', 'delete'],
+                      help='Specify which CloudFlare actions to list. (default: %default)')
     parser.add_option('-b', '--before',
                       help='Query logs before this date. (ex: "2018-12-30")')
     parser.add_option('-s', '--since',
                       help='Query logs since this date. (ex: "2018-01-01")')
-    parser.add_option('-a', '--actions', action='append', default=['add', 'delete'],
-                      help='Specify which CloudFlare actions to list.')
     
     return parser.parse_args()
 
