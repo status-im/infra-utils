@@ -47,9 +47,8 @@ def main():
 
     zone_id = zone['id']
 
-    settings_ssl = cf.zones.settings.ssl.get(zone_id)
-    ssl_status = settings_ssl['value']
-
+    #settings_ssl = cf.zones.settings.ssl.get(zone_id)
+    #ssl_status = settings_ssl['value']
     #settings_ipv6 = cf.zones.settings.ipv6.get(zone_id)
     #ipv6_status = settings_ipv6['value']
     #print(zone_id, zone_name, ssl_status, ipv6_status)
