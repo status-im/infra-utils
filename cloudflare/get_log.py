@@ -20,9 +20,9 @@ def format_log(log):
 
 def parse_opts():
     parser = OptionParser(description=HELP_DESCRIPTION, epilog=HELP_EXAMPLE)
-    parser.add_option('-m', '--mail', dest='cf_email', default='jakub@status.im',
+    parser.add_option('-M', '--mail', dest='cf_email', default='jakub@status.im',
                       help='CloudFlare Account email for auth. (default: %default)')
-    parser.add_option('-t', '--token', dest='cf_token', default=os.environ['CF_TOKEN'],
+    parser.add_option('-T', '--token', dest='cf_token', default=os.environ['CF_TOKEN'],
                       help='CloudFlare API token for auth (env CF_TOKEN used). (default: %default)')
     parser.add_option('-o', '--organiation', dest='cf_org_id', default='113ef908d19933ef327f079a3def53fc',
                       help='Specify which CloudFlare organization to query. (default: %default)')
