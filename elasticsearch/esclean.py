@@ -36,7 +36,11 @@ def print_logs(docs):
 def main():
     (opts, args) = parse_opts()
 
-    es = Elasticsearch([{'host': opts.es_host, 'port': opts.es_port}])
+    es = Elasticsearch(
+        [{ 'host': opts.es_host,
+           'port': opts.es_port }],
+        timeout=600
+    )
     
     print('Cluster: {}'.format(es.info().get('cluster_name')))
     
@@ -57,17 +61,16 @@ def main():
       count = resp.get('count')
       print('{:22} count: {:6}'.format(index, count))
 
-    if opts.query > 0:
-      print('Querying:')
-      for index in indices:
+      if opts.query > 0:
         resp = es.search(index=index, body=body)
         print_logs(resp['hits']['hits'])
-    elif opts.delete:
-      print('Deleting:')
-      for index in indices:
+      elif opts.delete:
         rval = es.delete_by_query(index=index, body=body)
-        rval2 = es.indices.forcemerge(index=index, params={'only_expunge_deletes':True})
-        print('{:22} {} {}'.format(index, rval, rval2))
+        rval2 = es.indices.forcemerge(
+            index=index,
+            params={'only_expunge_deletes':'true'}
+        )
+        print('{:22} Deleted: {:10} Failed: {}'.format(index, rval['deleted'], rval2['_shards']['failed']))
 
 if __name__ == '__main__':
     main()
