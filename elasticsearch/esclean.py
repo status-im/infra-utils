@@ -18,6 +18,8 @@ def parse_opts():
                       help='Program to query for.')
     parser.add_option('-m', '--message',
                       help='Message to query for.')
+    parser.add_option('-f', '--fleet',
+                      help='Fleet to query for.')
     parser.add_option('-d', '--delete', action='store_true',
                       help='Delete matching documents.')
     parser.add_option('-q', '--query', type='int', default=0,
@@ -49,6 +51,8 @@ def main():
     queries = []
     if opts.program:
         queries.append({'term': {'program': opts.program}})
+    if opts.fleet:
+        queries.append({'term': {'fleet': opts.fleet}})
     if opts.message:
         queries.append({'match_phrase':{'message': opts.message}})
 
