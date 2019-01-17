@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import pygithub3
 
 gh = None
