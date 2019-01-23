@@ -37,7 +37,7 @@ local function encode_base58(s)
 		more = false
 		for i = 1, #nt do
 			b = nt[i] + (256 * r)
-			q = b // 58
+			q = math.floor(b / 58)
 			-- if q is not null at least once, we are good
 			-- for another division by 58
 			more = more or q > 0
