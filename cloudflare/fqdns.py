@@ -15,8 +15,9 @@ def format_csv(record):
     )
 
 def format_table(record):
-    return '{:1} {:>6} {:30} {:30}'.format(
+    return '{:1} {:>20} {:>6} {:30} {:30}'.format(
         ('P' if record['proxied'] else ''),
+        record['id'],
         record['type'],
         record['name'],
         record['content'],
