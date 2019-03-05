@@ -6,7 +6,7 @@ IMAGE_TAG = jenkins
 IMAGE_NAME = statusteam/nix:$(IMAGE_TAG)
 
 build:
-	docker build --squash=true \
+	docker build \
 		--build-arg="JENKINS_UID=$(JENKINS_UID)" \
 		--build-arg="JENKINS_GID=$(JENKINS_GID)" \
 		--build-arg="NIX_VERSION=$(NIX_VERSION)" \

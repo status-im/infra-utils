@@ -4,6 +4,6 @@ stdenv.mkDerivation rec {
   env = buildEnv { name = name; paths = buildInputs; };
   buildInputs = with pkgs; [
     bash
-    wget
+    git
   ];
 }
