@@ -1,32 +1,47 @@
-ARG NIX_VERSION
-FROM nixos/nix:${NIX_VERSION}
+FROM ubuntu:16.04
 
+ENV LANG=en_US.UTF-8 \
+    LC_ALL=en_US.UTF-8 \
+    LANGUAGE=en_US.UTF-8
+
+ARG NIX_VERSION
 ARG JENKINS_UID
 ARG JENKINS_GID
 
-RUN apk add --no-cache file strace
+RUN apt-get update \
+ && apt-get -q -y --no-install-recommends \
+      install file locales curl strace jq bzip2 ca-certificates \
+ && apt-get clean \
+ && locale-gen ${LANG} \
+ && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/man
 
-RUN chown ${JENKINS_UID}:${JENKINS_GID} -R /nix
+ADD nix-install-${NIX_VERSION}.sh /tmp/nix-install.sh
 
-RUN addgroup -g ${JENKINS_GID} jenkins
-RUN adduser -D -g jenkins -u ${JENKINS_UID} -G jenkins jenkins -s /bin/bash
+RUN groupadd --gid ${JENKINS_GID} jenkins \
+ && useradd --shell /bin/bash --create-home --password "" \
+      --comment "jenkins" --groups root \
+      --uid ${JENKINS_UID} --gid ${JENKINS_GID} jenkins
 
 # this special wrapper script runs sh inside of nix-shell
-ADD bash.sh /bin/bash
-
-WORKDIR /home/jenkins
-USER jenkins
-
+#ADD bash.sh /bin/bash
 ADD nix.conf /home/jenkins/.config/nix/nix.conf
 ADD default.nix /home/jenkins/default.nix
 ADD default.nix /bin/default.nix
 
-RUN ls -l /nix/var/nix/profiles/
-RUN ln -s /nix/var/nix/profiles/default ~/.nix-profile
-RUN nix-channel --add https://nixos.org/channels/nixos-19.03-small
-RUN nix-channel --update
-RUN nix-shell --run 'echo'
+RUN mkdir /nix
+
+RUN chown ${JENKINS_UID}:${JENKINS_GID} -R /nix /home/jenkins
+
+WORKDIR /home/jenkins
+USER jenkins
+
+RUN export USER=jenkins \
+ && /tmp/nix-install.sh \
+ && . ~/.nix-profile/etc/profile.d/nix.sh \
+ && nix-shell --run 'echo'
+
+# hack to avoid calling login
+ENV USER=jenkins
 
 MAINTAINER Jakub Sokolowski "jakub@status.im"
 LABEL description="Adjusted Nix Docker image for use with Jenkins"
-ENTRYPOINT ["/bin/bash"]

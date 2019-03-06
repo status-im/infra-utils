@@ -1,4 +1,6 @@
 cloudflare/CloudFlare
+nix/nix-*.sh
 .terraform
 terraform.tfvars
 terraform.tfstate*
+*.bz2
