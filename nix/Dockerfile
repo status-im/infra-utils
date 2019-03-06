@@ -10,7 +10,7 @@ ARG JENKINS_GID
 
 RUN apt-get update \
  && apt-get -q -y --no-install-recommends \
-      install file locales curl strace jq bzip2 ca-certificates \
+      install file locales curl git strace jq bzip2 ca-certificates \
  && apt-get clean \
  && locale-gen ${LANG} \
  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/man
