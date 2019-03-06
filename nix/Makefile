@@ -6,7 +6,7 @@ NIX_INSTALL = nix-install-$(NIX_VERSION).sh
 NIX_SHA = 0039df605d2324f721f0c99ab76fc58fa60f791d84b30196eed805e8e65b1e51
 NIX_URL = https://nixos.org/releases/nix/nix-$(NIX_VERSION)/install
 
-IMAGE_TAG = ubuntu
+IMAGE_TAG = jenkins
 IMAGE_NAME = statusteam/nix:$(IMAGE_TAG)
 
 build: $(NIX_INSTALL)

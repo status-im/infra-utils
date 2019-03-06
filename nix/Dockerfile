@@ -42,6 +42,10 @@ RUN export USER=jenkins \
 
 # hack to avoid calling login
 ENV USER=jenkins
+# make nix tools available by default
+ENV PATH=/home/jenkins/.nix-profile/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV NIX_PATH=nixpkgs=/home/jenkins/.nix-defexpr/channels/nixpkgs
+ENV NIX_SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 
 MAINTAINER Jakub Sokolowski "jakub@status.im"
 LABEL description="Adjusted Nix Docker image for use with Jenkins"
