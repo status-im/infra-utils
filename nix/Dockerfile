@@ -10,7 +10,7 @@ ARG JENKINS_GID
 
 RUN apt-get update \
  && apt-get -q -y --no-install-recommends \
-      install file make locales curl git strace jq bzip2 ca-certificates s3cmd \
+      install file binutils make locales curl git strace jq bzip2 ca-certificates s3cmd \
  && apt-get clean \
  && locale-gen ${LANG} \
  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/man
