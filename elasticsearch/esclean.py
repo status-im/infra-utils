@@ -41,7 +41,8 @@ def main():
     es = Elasticsearch(
         [{ 'host': opts.es_host,
            'port': opts.es_port }],
-        timeout=600
+        timeout=1200,
+        retry_on_timeout=True
     )
     
     print('Cluster: {}'.format(es.info().get('cluster_name')))
