@@ -71,6 +71,9 @@ def main():
     if len(queries) > 0:
         body = {'query': {'bool': {'must': queries}}}
 
+    # don't match docs that already have peer_id field
+    body['query']['bool']['must_not'] = { 'exists': { 'field': 'peer_id' } }
+
     for index in indices:
       resp = es.count(index=index, body=body)
       count = resp.get('count')
