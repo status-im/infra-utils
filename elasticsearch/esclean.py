@@ -73,7 +73,7 @@ def main():
       if opts.query > 0:
         resp = es.search(index=index, body=body)
         print_logs(resp['hits']['hits'])
-      elif opts.delete:
+      elif opts.delete and count > 0:
         rval = es.delete_by_query(index=index, body=body)
         rval2 = es.indices.forcemerge(
             index=index,
