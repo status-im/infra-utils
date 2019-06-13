@@ -82,7 +82,7 @@ def main():
       if opts.query > 0:
         resp = es.search(index=index, body=body)
         print_logs(resp['hits']['hits'])
-      elif opts.update:
+      elif opts.update and count > 0:
         # add the script for extracting peer_id
         body['script'] = { 'lang': 'painless', 'inline': PAINLESS_SCRIPT }
         try:
