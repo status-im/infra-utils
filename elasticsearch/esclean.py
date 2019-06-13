@@ -20,6 +20,8 @@ def parse_opts():
                       help='Message to query for.')
     parser.add_option('-f', '--fleet',
                       help='Fleet to query for.')
+    parser.add_option('-s', '--severity',
+                      help='Log severity/level.')
     parser.add_option('-d', '--delete', action='store_true',
                       help='Delete matching documents.')
     parser.add_option('-q', '--query', type='int', default=0,
@@ -54,6 +56,8 @@ def main():
         queries.append({'term': {'program': opts.program}})
     if opts.fleet:
         queries.append({'term': {'fleet': opts.fleet}})
+    if opts.severity:
+        queries.append({'term': {'severity_name': opts.severity}})
     if opts.message:
         queries.append({'match_phrase':{'message': opts.message}})
 
