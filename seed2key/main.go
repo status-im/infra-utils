@@ -24,9 +24,16 @@ func main() {
 	mnemonic := extkeys.NewMnemonic()
 	masterKey, err := extkeys.NewMaster(mnemonic.MnemonicSeed(seedPhrase, ""))
 	if err != nil {
-		fmt.Printf("can not create master extended key: %v\n", err)
+		fmt.Printf("cannot create master extended key: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("Depth: %d\n", masterKey.Depth)
+	// extract chat key from the master key
+	chatKey, err := masterKey.ChildForPurpose(extkeys.KeyPurposeWallet, 0)
+	if err != nil {
+		fmt.Printf("cannot extract chat key from master key: %v\n", err)
 		os.Exit(1)
 	}
 	// print the private key
-	fmt.Printf("%#x\n", crypto.FromECDSA(masterKey.ToECDSA()))
+	fmt.Printf("%#x\n", crypto.FromECDSA(chatKey.ToECDSA()))
 }
