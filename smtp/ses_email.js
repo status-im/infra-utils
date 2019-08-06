@@ -13,7 +13,7 @@ const SMTP_CONF = {
 }
 
 const EMAIL = {
-  from: 'Dapps Approvals <dapps-approvals@status.im>',
+  from: 'Dapps Approvals <dapps-approvals@dap.ps>',
   to: 'jakub@status.im',
   subject: 'Test Email', 
   text: 'Test email from status-im/infra-utils/blob/master/smtp/ses_email.js',

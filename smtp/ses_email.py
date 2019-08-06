@@ -3,7 +3,7 @@
 import smtplib, os
 from email.mime.text import MIMEText
 
-sender = 'dapps-approvals@status.im'
+sender = 'dapps-approvals@dap.ps'
 receiver = 'dapps-approvals@status.im'
 
 smtp_port = 465
