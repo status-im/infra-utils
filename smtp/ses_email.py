@@ -6,7 +6,7 @@ from email.mime.text import MIMEText
 sender = 'dapps-approvals@status.im'
 receiver = 'dapps-approvals@status.im'
 
-smtp_port = 587
+smtp_port = 465
 smtp_host = "email-smtp.us-east-1.amazonaws.com"
 smtp_user = os.environ["SMTP_USER"]
 smtp_pass = os.environ["SMTP_PASS"]
