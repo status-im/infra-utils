@@ -47,20 +47,20 @@ fi
 old="${index}"
 new="${index}-re"
 echo "*------ ${old} -----------------------------------"
-echo "? $(printf '%-14s' ${old}) - Count: $(docs_count ${old})"
-echo "? $(printf '%-14s' ${old}) - Size: $(size_in_bytes ${old}) MB"
+echo "? $(printf '%-23s' ${old}) - Count: $(docs_count ${old})"
+echo "? $(printf '%-23s' ${old}) - Size: $(size_in_bytes ${old}) MB"
 echo "+ Creating: ${new}"
-create "${new}"
+create "${new}" > /dev/null
 echo "+ Reindexing: ${old} -> ${new}"
-reindex "${old}" "${new}"
-echo "? $(printf '%-14s' ${new}) - Count: $(docs_count ${new})"
-echo "? $(printf '%-14s' ${new}) - Size: $(size_in_bytes ${new}) MB"
+reindex "${old}" "${new}" > /dev/null
+echo "? $(printf '%-23s' ${new}) - Count: $(docs_count ${new})"
+echo "? $(printf '%-23s' ${new}) - Size: $(size_in_bytes ${new}) MB"
 echo "! Deleting: ${old}"
-delete "${old}"
+delete "${old}" > /dev/null
 echo "+ Re-Reindexing: ${new} -> ${old}"
-reindex "${new}" "${old}"
-echo "? $(printf '%-14s' ${old}) - Count: $(docs_count ${old})"
-echo "? $(printf '%-14s' ${old}) - Size: $(size_in_bytes ${old}) MB"
+reindex "${new}" "${old}" > /dev/null
+echo "? $(printf '%-23s' ${old}) - Count: $(docs_count ${old})"
+echo "? $(printf '%-23s' ${old}) - Size: $(size_in_bytes ${old}) MB"
 echo "! Deleting: ${new}"
-delete "${new}"
+delete "${new}" > /dev/null
 echo "*------ ${old} -----------------------------------"
