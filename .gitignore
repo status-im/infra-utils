@@ -1,5 +1,6 @@
 cloudflare/CloudFlare
 nix/nix-*.sh
+tcp-ping/tcp-ping-*
 .terraform
 terraform.tfvars
 terraform.tfstate*
