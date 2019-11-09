@@ -38,7 +38,7 @@ func Ping(address string, timeout time.Duration) error {
 	syscall.CloseOnExec(fd)
 	log.Println("Socket FD:", fd)
 
-	err = syscall.SetsockoptInt(fd, syscall.SOL_TCP, syscall.TCP_QUICKACK, 0)
+	err = syscall.SetsockoptInt(fd, syscall.IPPROTO_TCP, syscall.TCP_QUICKACK, 0)
 	if err != nil {
 		return os.NewSyscallError("setsockopt", err)
 	}
