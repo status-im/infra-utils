@@ -17,8 +17,6 @@ var addresses = []string{
 
 const timeout time.Duration = 2000 * time.Millisecond
 
-const epollET = 1 << 31
-
 func parseSockAddr(addr string) (unix.Sockaddr, error) {
 	tAddr, err := net.ResolveTCPAddr("tcp", addr)
 	if err != nil {
@@ -67,7 +65,7 @@ func Ping(address string, timeout time.Duration) error {
 	log.Println("Epoll FD:", epfd)
 
 	var event unix.EpollEvent
-	event.Events = (unix.EPOLLOUT | unix.EPOLLIN | epollET)
+	event.Events = (unix.EPOLLOUT | unix.EPOLLIN | unix.EPOLLET)
 	event.Fd = int32(fd)
 
 	err = unix.EpollCtl(epfd, unix.EPOLL_CTL_ADD, fd, &event)
