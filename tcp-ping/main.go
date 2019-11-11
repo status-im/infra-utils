@@ -77,6 +77,7 @@ func Ping(address string, timeout time.Duration) error {
 	var nEvents int
 	nEvents, err = unix.EpollWait(epfd, epollEvents[:], int(timeout.Milliseconds()))
 
+	log.Println("EpollWait err:", err)
 	if err != nil {
 		return os.NewSyscallError("epoll_wait", err)
 	}
