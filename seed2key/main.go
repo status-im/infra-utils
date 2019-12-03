@@ -27,7 +27,6 @@ func main() {
 		fmt.Printf("cannot create master extended key: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Printf("Depth: %d\n", masterKey.Depth)
 	// extract chat key from the master key
 	chatKey, err := masterKey.ChildForPurpose(extkeys.KeyPurposeWallet, 0)
 	if err != nil {
