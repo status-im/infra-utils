@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 import os
+from retry import retry
 from optparse import OptionParser
 from elasticsearch import Elasticsearch
+from elasticsearch.exceptions import ConflictError
 
 HELP_DESCRIPTION='This is a simple utility for querying CloudFlare for audit logs.'
 HELP_EXAMPLE='Example: ./get_log.py -s 2018-10-01 -a delete'
@@ -37,6 +39,10 @@ def print_logs(docs):
             log['logsource'], log['message'][:90]
         ))
 
+retry(ConflictError, tries=3, delay=6000, backoff=6000)
+def delete_retry(es, index, body):
+    return es.delete_by_query(index=index, body=body)
+
 def main():
     (opts, args) = parse_opts()
 
@@ -71,10 +77,10 @@ def main():
       print('{:22} count: {:6}'.format(index, count))
 
       if opts.query > 0:
-        resp = es.search(index=index, body=body)
-        print_logs(resp['hits']['hits'])
+         resp = es.search(index=index, body=body)
+         print_logs(resp['hits']['hits'])
       elif opts.delete and count > 0:
-        rval = es.delete_by_query(index=index, body=body)
+        rval = delete_retry(es, index, body)
         rval2 = es.indices.forcemerge(
             index=index,
             params={'only_expunge_deletes':'true'}
