@@ -1,0 +1,10 @@
+{
+  "name": "ipfs-pin",
+  "version": "1.0.0",
+  "main": "pin_image.js",
+  "license": "MIT",
+  "dependencies": {
+    "base64-img": "^1.0.4",
+    "ipfs-http-client": "32.0.1"
+  }
+}
