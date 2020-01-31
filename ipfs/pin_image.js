@@ -5,8 +5,8 @@ const ipfsClient = require('ipfs-http-client')
 
 const main = async () => {
   const ipfs = ipfsClient(
-      process.env.IPFS_HOST,
-      process.env.IPFS_PORT,
+      process.env.IPFS_HOST || 'ipfs.status.im',
+      process.env.IPFS_PORT || 443,
       { protocol: 'https' }
   )
 
