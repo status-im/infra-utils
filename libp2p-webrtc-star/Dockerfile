@@ -1,11 +1,13 @@
-FROM node:10.15-alpine
+FROM node:12.15-alpine3.11
+
+ARG WEBRTC_VERSION
 
 ENV PORT=9090 \
     HOST=0.0.0.0
 
 RUN apk update \
  && apk add --no-cache git \
- && yarn global add libp2p-webrtc-star \
+ && yarn global add libp2p-webrtc-star@${WEBRTC_VERSION} \
  && yarn cache clean \
  && apk del git
 
@@ -14,4 +16,4 @@ LABEL source="https://github.com/status-im/infra-utils" \
       maintainer="jakub@status.im"
 
 CMD ["/usr/local/bin/star-signal"]
-EXPOSE $DEV_P2P_PORT
+EXPOSE $PORT
