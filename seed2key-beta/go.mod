@@ -1,4 +1,4 @@
-module github.com/status-im/infra-utils/seed2key-legacy
+module github.com/status-im/infra-utils/seed2key-beta
 
 go 1.13
 
