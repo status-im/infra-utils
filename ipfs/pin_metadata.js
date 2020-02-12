@@ -15,7 +15,7 @@ const ipfsUpload = async (ipfs, data) => {
 const updateDapp = async (dbCol, oldHash, newHash) => {
   return dbCol.updateOne(
     {hash: oldHash},
-    {'$set': {hash: newHash}}
+    {'$set': {ipfsHash: newHash}}
   )
 }
 
