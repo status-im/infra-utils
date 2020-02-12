@@ -12,9 +12,9 @@ const ipfsUpload = async (ipfs, data) => {
   return resp[0].hash
 }
 
-const updateDapp = async (dbCol, oldHash, newHash) => {
+const updateDapp = async (dbCol, legacyHash, newHash) => {
   return dbCol.updateOne(
-    {hash: oldHash},
+    {hash: legacyHash},
     {'$set': {ipfsHash: newHash}}
   )
 }
@@ -36,8 +36,10 @@ const main = async () => {
   const dapps = await dbDapps.find().toArray()
 
   for (let dapp of dapps) {
-    let oldHash = dapp.hash
+    let legacyHash = dapp.hash
+    let oldHash = dapp.ipfsHash
     console.log(` * ${dapp.details.name} - ${dapp.details.url}`)
+    console.log(`   - LEG HASH: ${legacyHash}`)
     console.log(`   - OLD HASH: ${oldHash}`)
     let newHash = await ipfsUpload(ipfs, dapp.details)
     console.log(`   - NEW HASH: ${newHash}`)
@@ -46,7 +48,7 @@ const main = async () => {
       continue
     }
 
-    let rval = await updateDapp(dbDapps, oldHash, newHash)
+    let rval = await updateDapp(dbDapps, legacyHash, newHash)
     if (rval.result.ok != 1) {
       console.log('   ! FAILURE')
     }
