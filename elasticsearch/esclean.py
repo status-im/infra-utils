@@ -41,7 +41,7 @@ def print_logs(docs):
             log['logsource'], log['message'][:90]
         ))
 
-@retry(ConflictError, tries=3, delay=6000, backoff=6000)
+@retry(ConflictError, tries=5, delay=120, backoff=2)
 def delete_retry(es, index, body):
     return es.delete_by_query(index=index, body=body)
 
