@@ -5,8 +5,8 @@ from optparse import OptionParser
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import ConflictError
 
-HELP_DESCRIPTION='This is a simple utility for querying CloudFlare for audit logs.'
-HELP_EXAMPLE='Example: ./get_log.py -s 2018-10-01 -a delete'
+HELP_DESCRIPTION='This is a simple utility for cleaning ElasticSearch indices.'
+HELP_EXAMPLE='Example: ./esclean.py -i "logstash-2019.11.*" -p beacon -d'
 
 def parse_opts():
     parser = OptionParser(description=HELP_DESCRIPTION, epilog=HELP_EXAMPLE)
