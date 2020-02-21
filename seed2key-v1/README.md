@@ -13,4 +13,4 @@ I created it so I could use my normal Status account with the [status-console-cl
 
 # Warning
 
-This utility is not compatible with pre-V1 Status accounts.
+This utility is only compatible with V1 Status accounts.
