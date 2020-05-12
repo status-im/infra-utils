@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# This can be easily used with something like:
+# for B in $(list_old_branches.sh); do git branch --delete "${BRANCH}"; done
+
 function getCommitUnix() {
     git show --no-patch --no-notes --pretty='%at' ${1}
 }
@@ -14,6 +17,9 @@ REMOTE_BRANCHES=$(git ls-remote --heads --heads ${REMOTE} | cut -f2)
 
 for BRANCH in ${REMOTE_BRANCHES}; do
     BRANCH_NAME="${BRANCH/#refs\/heads\/}"
+    if [[ ${BRANCH_NAME} = release* ]]; then
+        continue
+    fi
     COMMIT_DATE_UNIX=$(getCommitUnix remotes/origin/$BRANCH_NAME)
     if [[ ${COMMIT_DATE_UNIX} < ${OLDER_THAN} ]]; then
         echo "${BRANCH_NAME}"
