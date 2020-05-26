@@ -5,7 +5,7 @@ from optparse import OptionParser
 from elasticsearch import Elasticsearch
 
 HELP_DESCRIPTION='This is a simple utility extracting a peer_id field for existing logs.'
-HELP_EXAMPLE='Example: ./peer_id.py -s 2018-10-01 -a delete'
+HELP_EXAMPLE='Example: ./peer_id.py -s 2018-10-01 --update'
 
 PAINLESS_SCRIPT = """
 if (ctx._source.peer_id == null) {
@@ -24,16 +24,16 @@ def parse_opts():
                       help='ElasticSearch port.')
     parser.add_option('-i', '--index-pattern', default='logstash-*',
                       help='Patter for matching indices.')
-    parser.add_option('-p', '--program',
+    parser.add_option('-p', '--program', default='docker',
                       help='Program to query for.')
-    parser.add_option('-m', '--message',
+    parser.add_option('-m', '--message', default='peerId',
                       help='Message to query for.')
     parser.add_option('-f', '--fleet',
                       help='Fleet to query for.')
     parser.add_option('-u', '--update', action='store_true',
                       help='Update matching documents.')
-    parser.add_option('-q', '--query', type='int', default=0,
-                      help='Query matching documents.')
+    parser.add_option('-q', '--query', action='store_true',
+                      help='Only query, don\'t update.')
     
     return parser.parse_args()
 
@@ -67,7 +67,7 @@ def main():
     if opts.message:
         queries.append({'match_phrase':{'message': opts.message}})
 
-    body = None
+    body = {'query': {'bool': {}}}
     if len(queries) > 0:
         body = {'query': {'bool': {'must': queries}}}
 
@@ -81,7 +81,7 @@ def main():
 
       if opts.query > 0:
         resp = es.search(index=index, body=body)
-        print_logs(resp['hits']['hits'])
+        #print_logs(resp['hits']['hits'])
       elif opts.update and count > 0:
         # add the script for extracting peer_id
         body['script'] = { 'lang': 'painless', 'inline': PAINLESS_SCRIPT }
