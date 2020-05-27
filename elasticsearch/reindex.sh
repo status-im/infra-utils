@@ -22,6 +22,10 @@ function reindex() {
   queryAPI POST "_reindex" "{\"source\":{\"index\":\"${1}\"},\"dest\":{\"index\":\"${2}\"}}"
 }
 
+function clone() {
+  queryAPI POST "/${1}/_clone/${2}" '{"settings":{"index.blocks.write":null}}'
+}
+
 function delete() {
   queryAPI DELETE "${1}"
 }
@@ -46,21 +50,21 @@ fi
 
 old="${index}"
 new="${index}-re"
-echo "*------ ${old} -----------------------------------"
-echo "? $(printf '%-23s' ${old}) - Count: $(docs_count ${old})"
-echo "? $(printf '%-23s' ${old}) - Size: $(size_in_bytes ${old}) MB"
+echo "*----------- ${old} ------------------------------"
+echo "? $(printf '%-21s' ${old}) - Count: $(docs_count ${old})"
+echo "? $(printf '%-21s' ${old}) - Size: $(size_in_bytes ${old}) MB"
 echo "+ Creating: ${new}"
 create "${new}" > /dev/null
 echo "+ Reindexing: ${old} -> ${new}"
 reindex "${old}" "${new}" > /dev/null
-echo "? $(printf '%-23s' ${new}) - Count: $(docs_count ${new})"
-echo "? $(printf '%-23s' ${new}) - Size: $(size_in_bytes ${new}) MB"
+echo "? $(printf '%-21s' ${new}) - Count: $(docs_count ${new})"
+echo "? $(printf '%-21s' ${new}) - Size: $(size_in_bytes ${new}) MB"
 echo "! Deleting: ${old}"
 delete "${old}" > /dev/null
-echo "+ Re-Reindexing: ${new} -> ${old}"
-reindex "${new}" "${old}" > /dev/null
-echo "? $(printf '%-23s' ${old}) - Count: $(docs_count ${old})"
-echo "? $(printf '%-23s' ${old}) - Size: $(size_in_bytes ${old}) MB"
+echo "+ Cloning: ${new} -> ${old}"
+clone "${new}" "${old}" > /dev/null
+echo "? $(printf '%-21s' ${old}) - Count: $(docs_count ${old})"
+echo "? $(printf '%-21s' ${old}) - Size: $(size_in_bytes ${old}) MB"
 echo "! Deleting: ${new}"
 delete "${new}" > /dev/null
-echo "*------ ${old} -----------------------------------"
+echo "*----------- ${old} ------------------------------"
