@@ -75,21 +75,21 @@ def main():
     body['query']['bool']['must_not'] = { 'exists': { 'field': 'peer_id' } }
 
     for index in indices:
-      resp = es.count(index=index, body=body)
-      count = resp.get('count')
-      print('{:22} count: {:6}'.format(index, count))
+        resp = es.count(index=index, body=body)
+        count = resp.get('count')
+        print('{:22} count: {:6}'.format(index, count))
 
-      if opts.query > 0:
-        resp = es.search(index=index, body=body)
-        #print_logs(resp['hits']['hits'])
-      elif opts.update and count > 0:
-        # add the script for extracting peer_id
-        body['script'] = { 'lang': 'painless', 'inline': PAINLESS_SCRIPT }
-        try:
-            rval = es.update_by_query(index=index, body=body)
-        except Exception as ex:
-            print(json.dumps(ex.info, indent=2))
-        print('{:22} Updated: {:10} Failed: {}'.format(index, rval['updated'], rval.get('failed', 0)))
+        if opts.query and count > 0:
+            resp = es.search(index=index, body=body)
+            #print_logs(resp['hits']['hits'])
+        elif opts.update and count > 0:
+            # add the script for extracting peer_id
+            body['script'] = { 'lang': 'painless', 'inline': PAINLESS_SCRIPT }
+            try:
+                rval = es.update_by_query(index=index, body=body)
+            except Exception as ex:
+                print(json.dumps(ex.info, indent=2))
+            print('{:22} Updated: {:10} Failed: {}'.format(index, rval['updated'], rval.get('failed', 0)))
 
 if __name__ == '__main__':
     main()
