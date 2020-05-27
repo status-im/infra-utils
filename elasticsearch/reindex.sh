@@ -7,9 +7,9 @@ function queryAPI() {
   method=$1
   path=$2
   data=$3
-  cmd="curl -s -X${method} http://localhost:9200/${path}"
+  cmd="curl -f -s -X${method} http://localhost:9200/${path}"
   if [[ -n "${data}" ]]; then
-    cmd+=" -f -H 'content-type:application/json' -d '${data}'"
+    cmd+=" -H 'content-type:application/json' -d '${data}'"
   fi
   eval "${cmd}"
 }
@@ -23,15 +23,15 @@ function reindex() {
 }
 
 function clone() {
-  queryAPI POST "/${1}/_clone/${2}" '{"settings":{"index.blocks.write":null}}'
+  queryAPI POST "${1}/_clone/${2}" '{"settings":{"index.blocks.write":null}}'
 }
 
 function read_only() {
-  queryAPI PUT "/${1}/_settings" '{"settings":{"index.blocks.write":"true"}}'
+  queryAPI PUT "${1}/_settings" '{"settings":{"index.blocks.write":"true"}}'
 }
 
 function wait_green() {
-  queryAPI GET "/_cluster/health/${1}?wait_for_status=green&timeout=9000s"
+  queryAPI GET "_cluster/health/${1}?wait_for_status=green&timeout=9000s"
 }
 
 function delete() {
@@ -71,8 +71,9 @@ echo "! Deleting: ${old}"
 delete "${old}" > /dev/null
 echo "+ Cloning: ${new} -> ${old}"
 read_only "${new}" > /dev/null
-clone "${new}" "${old}" > /dev/null
-wait_green "${old}"
+clone "${new}" "${old}"
+echo "+ Waiting: ${old}"
+wait_green "${old}" > /dev/null
 echo "? $(printf '%-21s' ${old}) - Count: $(docs_count ${old})"
 echo "? $(printf '%-21s' ${old}) - Size: $(size_in_bytes ${old}) MB"
 echo "! Deleting: ${new}"
