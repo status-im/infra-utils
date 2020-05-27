@@ -26,6 +26,14 @@ function clone() {
   queryAPI POST "/${1}/_clone/${2}" '{"settings":{"index.blocks.write":null}}'
 }
 
+function read_only() {
+  queryAPI PUT "/${1}/_settings" '{"settings":{"index.blocks.write":"true"}}'
+}
+
+function wait_green() {
+  queryAPI GET "/_cluster/health/${1}?wait_for_status=green&timeout=9000s"
+}
+
 function delete() {
   queryAPI DELETE "${1}"
 }
@@ -62,7 +70,9 @@ echo "? $(printf '%-21s' ${new}) - Size: $(size_in_bytes ${new}) MB"
 echo "! Deleting: ${old}"
 delete "${old}" > /dev/null
 echo "+ Cloning: ${new} -> ${old}"
+read_only "${new}" > /dev/null
 clone "${new}" "${old}" > /dev/null
+wait_green "${old}"
 echo "? $(printf '%-21s' ${old}) - Count: $(docs_count ${old})"
 echo "? $(printf '%-21s' ${old}) - Size: $(size_in_bytes ${old}) MB"
 echo "! Deleting: ${new}"
