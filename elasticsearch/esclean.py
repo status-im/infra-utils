@@ -16,6 +16,8 @@ def parse_opts():
                       help='ElasticSearch port.')
     parser.add_option('-i', '--index-pattern', default='logstash-*',
                       help='Patter for matching indices.')
+    parser.add_option('-t', '--tag',
+                      help='Had given tag.')
     parser.add_option('-p', '--program',
                       help='Program to query for.')
     parser.add_option('-m', '--message',
@@ -24,6 +26,8 @@ def parse_opts():
                       help='Fleet to query for.')
     parser.add_option('-s', '--severity',
                       help='Log severity/level.')
+    parser.add_option('-I', '--logsource-ip',
+                      help='IP of log source.')
     parser.add_option('-o', '--older-than',
                       help='How old the logs should be, in days.')
     parser.add_option('-d', '--delete', action='store_true',
@@ -37,8 +41,8 @@ def print_logs(docs):
     for doc in docs:
         log = doc['_source']
         print('{:26} {:21} {:38} {}'.format(
-            log['@timestamp'], log['program'],
-            log['logsource'], log['message'][:90]
+            log['@timestamp'], log.get('program', 'unknown'),
+            log.get('logsource', 'unknown'), log['message'][:2000]
         ))
 
 @retry(ConflictError, tries=5, delay=120, backoff=2)
@@ -60,12 +64,16 @@ def main():
     indices = es.indices.get(index=opts.index_pattern).keys()
     
     queries = []
+    if opts.tag:
+        queries.append({'match': {'tags': opts.tag}})
     if opts.program:
         queries.append({'term': {'program': opts.program}})
     if opts.fleet:
         queries.append({'term': {'fleet': opts.fleet}})
     if opts.severity:
         queries.append({'term': {'severity_name': opts.severity}})
+    if opts.logsource_ip:
+        queries.append({'term': {'logsource_ip': opts.logsource_ip}})
     if opts.message:
         queries.append({'match_phrase':{'message': opts.message}})
     if opts.query:
