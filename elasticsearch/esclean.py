@@ -28,7 +28,7 @@ def parse_opts():
                       help='How old the logs should be, in days.')
     parser.add_option('-d', '--delete', action='store_true',
                       help='Delete matching documents.')
-    parser.add_option('-q', '--query', type='int', default=0,
+    parser.add_option('-q', '--query', type='str',
                       help='Query matching documents.')
     
     return parser.parse_args()
@@ -68,6 +68,8 @@ def main():
         queries.append({'term': {'severity_name': opts.severity}})
     if opts.message:
         queries.append({'match_phrase':{'message': opts.message}})
+    if opts.query:
+        queries.append({'query_string':{'query': opts.query}})
     if opts.older_than:
         queries.append({'range':{ '@timestamp': {
             'lt': 'now-{}d'.format(opts.older_than),
@@ -79,20 +81,20 @@ def main():
         body = {'query': {'bool': {'must': queries}}}
 
     for index in indices:
-      resp = es.count(index=index, body=body)
-      count = resp.get('count')
-      print('{:22} count: {:6}'.format(index, count))
+        resp = es.count(index=index, body=body)
+        count = resp.get('count')
+        print('{:22} count: {:6}'.format(index, count))
 
-      if opts.query > 0:
-         resp = es.search(index=index, body=body)
-         print_logs(resp['hits']['hits'])
-      elif opts.delete and count > 0:
-        rval = delete_retry(es, index, body)
-        rval2 = es.indices.forcemerge(
-            index=index,
-            params={'only_expunge_deletes':'true'}
-        )
-        print('{:22} Deleted: {:10} Failed: {}'.format(index, rval['deleted'], rval2['_shards']['failed']))
+        if opts.delete and count > 0:
+            rval = delete_retry(es, index, body)
+            rval2 = es.indices.forcemerge(
+                index=index,
+                params={'only_expunge_deletes':'true'}
+            )
+            print('{:22} Deleted: {:10} Failed: {}'.format(index, rval['deleted'], rval2['_shards']['failed']))
+        #else:
+        #    resp = es.search(index=index, body=body)
+        #    print_logs(resp['hits']['hits'])
 
 if __name__ == '__main__':
     main()
