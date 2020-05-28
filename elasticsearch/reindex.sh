@@ -4,12 +4,12 @@ set -e
 #set -x
 
 function queryAPI() {
-  method=$1
-  path=$2
-  data=$3
-  cmd="curl -f -s -X${method} http://localhost:9200/${path}"
-  if [[ -n "${data}" ]]; then
-    cmd+=" -H 'content-type:application/json' -d '${data}'"
+  local method=$1
+  local url_path=$2
+  local payload=$3
+  cmd="curl -f -s -X${method} http://localhost:9200/${url_path}"
+  if [[ -n "${payload}" ]]; then
+    cmd+=" -H 'content-type:application/json' -d '${payload}'"
   fi
   eval "${cmd}"
 }
@@ -58,24 +58,37 @@ fi
 
 old="${index}"
 new="${index}-re"
+
 echo "*----------- ${old} ------------------------------"
 echo "? $(printf '%-21s' ${old}) - Count: $(docs_count ${old})"
 echo "? $(printf '%-21s' ${old}) - Size: $(size_in_bytes ${old}) MB"
 echo "+ Creating: ${new}"
+
 create "${new}" > /dev/null
+
 echo "+ Reindexing: ${old} -> ${new}"
+
 reindex "${old}" "${new}" > /dev/null
+
 echo "? $(printf '%-21s' ${new}) - Count: $(docs_count ${new})"
 echo "? $(printf '%-21s' ${new}) - Size: $(size_in_bytes ${new}) MB"
 echo "! Deleting: ${old}"
+
 delete "${old}" > /dev/null
+
 echo "+ Cloning: ${new} -> ${old}"
+
 read_only "${new}" > /dev/null
-clone "${new}" "${old}"
+clone "${new}" "${old}" > /dev/null
+
 echo "+ Waiting: ${old}"
+
 wait_green "${old}" > /dev/null
+
 echo "? $(printf '%-21s' ${old}) - Count: $(docs_count ${old})"
 echo "? $(printf '%-21s' ${old}) - Size: $(size_in_bytes ${old}) MB"
 echo "! Deleting: ${new}"
+
 delete "${new}" > /dev/null
+
 echo "*----------- ${old} ------------------------------"
