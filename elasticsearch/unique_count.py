@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import csv
+import hashlib
 from optparse import OptionParser
 from elasticsearch import Elasticsearch
 
@@ -31,6 +32,9 @@ def parse_opts():
 def remove_prefix(text, prefix):
     return text[text.startswith(prefix) and len(prefix):]
 
+def hash_string(text):
+    return hashlib.sha256(text.encode('utf-8')).hexdigest()
+
 def main():
     (opts, args) = parse_opts()
 
@@ -46,17 +50,16 @@ def main():
     indices = es.indices.get(index=opts.index_pattern).keys()
     
     body = {
-        "size": 0,
-        "aggs": { "peers": {
-            "terms": {
-                "field": opts.field,
-                "size": 10000,
-                #"min_doc_count": 100,
+        'size': 0,
+        'aggs': { 'peers': {
+            'terms': {
+                'field': opts.field,
+                'size': 10000,
             },
         }, },
     }
 
-    csv_field_names = ["date", "peer", "count"]
+    csv_field_names = ['date', 'peer', 'count']
 
     with open(opts.out_file, 'w') as f:
         writer = csv.DictWriter(f, fieldnames=csv_field_names)
@@ -65,13 +68,13 @@ def main():
         for index in indices:
             resp = es.search(index=index, body=body)
             aggs = resp.get('aggregations')
-            print('{:22} count: {:6}'.format(index, len(aggs["peers"]["buckets"])))
+            print('{:22} count: {:6}'.format(index, len(aggs['peers']['buckets'])))
 
-            for bucket in aggs["peers"]["buckets"]:
+            for bucket in aggs['peers']['buckets']:
                 writer.writerow({
-                    "date": remove_prefix(index, 'logstash-'),
-                    "peer": bucket["key"],
-                    "count": bucket["doc_count"],
+                    'date': remove_prefix(index, 'logstash-'),
+                    'peer': hash_string(bucket['key']),
+                    'count': bucket['doc_count'],
                 })
 
 if __name__ == '__main__':
