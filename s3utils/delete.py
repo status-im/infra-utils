@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 import os
+import re
 import boto3
 import botocore
 from optparse import OptionParser
 from datetime import datetime, timedelta, timezone
 
-HELP_DESCRIPTION='This script removes files older than set number of days from s3 bucket.'
-HELP_EXAMPLE='Example: ./delete_old.py -b status-im -o 90'
+HELP_DESCRIPTION='This script removes files from s3 bucket.'
+HELP_EXAMPLE="Example: ./delete.py -b status-im -o 90 -f '.*windows.*'"
 
 def parse_opts():
     parser = OptionParser(description=HELP_DESCRIPTION, epilog=HELP_EXAMPLE)
@@ -18,6 +19,8 @@ def parse_opts():
                       help='Name of s3 bucket region.')
     parser.add_option('-o', '--older-than', type='int', default=30,
                       help='Max age of files to leave in bucket.')
+    parser.add_option('-f', '--filter', type='string',
+                      help='Regex filter for matching files to delete.')
     parser.add_option('-d', '--dry-run', action='store_true',
                       help='Only print files that will be deleted.')
     (opts, args) = parser.parse_args()
@@ -46,6 +49,8 @@ def main():
         if name == 'index.html':
             continue
         if modified > threshold:
+            continue
+        if opts.filter and re.match(opts.filter, name) is None:
             continue
         print('DELETING: {}:{}'.format(opts.bucket, name))
         if not opts.dry_run:
