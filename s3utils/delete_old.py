@@ -18,12 +18,17 @@ def parse_opts():
                       help='Name of s3 bucket region.')
     parser.add_option('-o', '--older-than', type='int', default=30,
                       help='Max age of files to leave in bucket.')
+    parser.add_option('-d', '--dry-run', action='store_true',
+                      help='Only print files that will be deleted.')
     (opts, args) = parser.parse_args()
 
     return (opts, args)
 
 def main():
     (opts, args) = parse_opts()
+
+    if opts.dry_run:
+        print('DRY-RUN!')
 
     session = boto3.session.Session()
     s3 = session.client('s3',
@@ -32,13 +37,6 @@ def main():
         aws_access_key_id=os.environ['DO_ID'],
         aws_secret_access_key=os.environ['DO_SECRET']
     )
-
-    def exists(name):
-        try:
-            s3.get_object(Bucket=opts.bucket, Key=name)
-        except s3.exceptions.NoSuchKey:
-            return False
-        return True
 
     threshold = datetime.now(timezone.utc) - timedelta(days=opts.older_than)
 
@@ -50,7 +48,8 @@ def main():
         if modified > threshold:
             continue
         print('DELETING: {}:{}'.format(opts.bucket, name))
-        s3.delete_object(Bucket=opts.bucket, Key=name)
+        if not opts.dry_run:
+            s3.delete_object(Bucket=opts.bucket, Key=name)
 
 
 if __name__ == '__main__':
