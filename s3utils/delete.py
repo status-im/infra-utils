@@ -17,7 +17,7 @@ def parse_opts():
                       help='Name of the s3 bucket.')
     parser.add_option('-r', '--region', default='ams3',
                       help='Name of s3 bucket region.')
-    parser.add_option('-o', '--older-than', type='int', default=30,
+    parser.add_option('-o', '--older-than', type='int',
                       help='Max age of files to leave in bucket.')
     parser.add_option('-f', '--filter', type='string',
                       help='Regex filter for matching files to delete.')
@@ -41,14 +41,16 @@ def main():
         aws_secret_access_key=os.environ['DO_SECRET']
     )
 
-    threshold = datetime.now(timezone.utc) - timedelta(days=opts.older_than)
+    threshold = 0
+    if opts.older_than:
+        threshold = datetime.now(timezone.utc) - timedelta(days=opts.older_than)
 
-    for f in s3.list_objects_v2(Bucket=opts.bucket, MaxKeys=9999)['Contents']:
+    for f in s3.list_objects_v2(Bucket=opts.bucket, MaxKeys=99999)['Contents']:
         name = f['Key']
         modified = f['LastModified']
         if name == 'index.html':
             continue
-        if modified > threshold:
+        if threshold != 0 and modified > threshold:
             continue
         if opts.filter and re.match(opts.filter, name) is None:
             continue
