@@ -7,7 +7,11 @@ function getCommitUnix() {
     git show --no-patch --no-notes --pretty='%at' ${1}
 }
 
-OLDER_THAN_DAYS="90"
+OLDER_THAN_DAYS="120"
+if [[ ! -z "${1}" ]]; then
+    OLDER_THAN_DAYS="${1}"
+fi
+
 CURRENT_TIME=$(date +%s)
 OLDER_THAN_UNIX=$(( ${OLDER_THAN_DAYS} * 86400 ))
 OLDER_THAN=$(( ${CURRENT_TIME} - ${OLDER_THAN_UNIX} ))
