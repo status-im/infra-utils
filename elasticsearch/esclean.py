@@ -66,7 +66,9 @@ def main():
     queries = []
     if opts.tag:
         queries.append({'match': {'tags': opts.tag}})
-    if opts.program:
+    if opts.program and '*' in opts.program:
+        queries.append({'wildcard': {'program': opts.program}})
+    elif opts.program:
         queries.append({'term': {'program': opts.program}})
     if opts.fleet:
         queries.append({'term': {'fleet': opts.fleet}})
@@ -91,7 +93,7 @@ def main():
     for index in indices:
         resp = es.count(index=index, body=body)
         count = resp.get('count')
-        print('{:22} count: {:6}'.format(index, count))
+        print('{:22} count: {:8}'.format(index, count))
 
         if opts.delete and count > 0:
             rval = delete_retry(es, index, body)
