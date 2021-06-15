@@ -20,22 +20,22 @@ for line in lines:
 
     matches = re.match('  src: (.*)', next(lines))
     if not matches:
-        continue
+        raise Exception('Unable to find source URL: %s' % name)
     src = matches.group(1)
 
     matches = re.match('^git@github.com:[^/]+/(.+).git$', src)
     if not matches:
-        raise Exception('Unable to find full repo name!')
+        raise Exception('Unable to find full repo name: %s' % name)
     full_name = matches.group(1)
 
     matches = re.match('  version: (.*)', next(lines))
     if not matches:
-        continue
+        raise Exception('Unable to find current version: %s' % name)
     version = matches.group(1)
 
     matches = re.match('  scm: (.*)', next(lines))
     if not matches:
-        continue
+        raise Exception('Unable to find version control type: %s' % name)
     scm = matches.group(1)
 
     entries.append({
