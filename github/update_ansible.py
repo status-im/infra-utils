@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 # I could use yaml module, but it fucks ups the order and formatting.
 import re
+from os import getenv
 from os.path import isdir, expanduser
 from subprocess import check_output
 
 path = 'ansible/requirements.yml'
+repos_path = getenv('ANSIBLE_REPOS_PATH', '~/work')
 
 with open(path, 'r') as f:
     contents = f.readlines()
@@ -48,7 +50,7 @@ for line in lines:
 
 # Read commits from repos
 for entry in entries:
-    cwd = expanduser('~/work/%s' % entry['full_name'])
+    cwd = expanduser('%s/%s' % (repos_path, entry['full_name']))
     if not isdir(cwd):
         print('No such repo: %s' % cwd)
         continue
