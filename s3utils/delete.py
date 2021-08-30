@@ -45,18 +45,21 @@ def main():
     if opts.older_than:
         threshold = datetime.now(timezone.utc) - timedelta(days=opts.older_than)
 
-    for f in s3.list_objects_v2(Bucket=opts.bucket, MaxKeys=99999)['Contents']:
-        name = f['Key']
-        modified = f['LastModified']
-        if name == 'index.html':
-            continue
-        if threshold != 0 and modified > threshold:
-            continue
-        if opts.filter and re.match(opts.filter, name) is None:
-            continue
-        print('DELETING: {}:{}'.format(opts.bucket, name))
-        if not opts.dry_run:
-            s3.delete_object(Bucket=opts.bucket, Key=name)
+    objects = s3.get_paginator('list_objects_v2')
+
+    for page in objects.paginate(Bucket=opts.bucket, MaxKeys=99999):
+        for obj in page['Contents']:
+            name = obj['Key']
+            modified = obj['LastModified']
+            if name == 'index.html':
+                continue
+            if threshold != 0 and modified > threshold:
+                continue
+            if opts.filter and re.match(opts.filter, name) is None:
+                continue
+            print('DELETING: {}:{}'.format(opts.bucket, name))
+            if not opts.dry_run:
+                s3.delete_object(Bucket=opts.bucket, Key=name)
 
 
 if __name__ == '__main__':
