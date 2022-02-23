@@ -45,14 +45,26 @@ def main():
         dc = dcs.setdefault(node['Datacenter'], [])
         fleet = fleets.setdefault(fleet_name, [])
 
-        dc.append(node['Node'])
-        fleet.append(node['Node'])
-        env.append(node['Node'])
+        dc.append(node)
+        fleet.append(node)
+        env.append(node)
 
     out = {
         'total': len(nodes),
-        'dcs': {dc: len(hosts) for dc, hosts in dcs.items()},
-        'envs': {env: len(hosts) for env, hosts in envs.items()},
+        'dcs': {
+            dc: {
+                "count": len(hosts),
+                "vcpus": sum(int(h['Meta'].get('hw_vcpu_count', 0)) for h in hosts),
+                "memory": sum(int(h['Meta'].get('hw_memory_mb', 0)) for h in hosts),
+            } for dc, hosts in dcs.items()
+        },
+        'envs': {
+            env: {
+                "count": len(hosts),
+                "vcpus": sum(int(h['Meta'].get('hw_vcpu_count', 0)) for h in hosts),
+                "memory": sum(int(h['Meta'].get('hw_memory_mb', 0)) for h in hosts),
+            } for env, hosts in envs.items()
+        },
         #'fleets': {fleet: len(hosts) for fleet, hosts in fleets.items()},
     }
 
