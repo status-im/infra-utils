@@ -2,7 +2,7 @@
 
 START=$1
 STOP=$2
-REPO=${3:-status-im/status-react}
+REPO=${3:-status-im/status-mobile}
 
 GH_URL=https://api.github.com
 
@@ -11,7 +11,7 @@ function ghapi() {
 }
 
 if [[ -z "${@}" ]]; then
-    echo "Usage: prs_for_diff.sh release/1.0.x release/1.1.x status-im/status-react"
+    echo "Usage: prs_for_diff.sh release/1.0.x release/1.1.x status-im/status-mobile"
     exit 1
 fi
 
