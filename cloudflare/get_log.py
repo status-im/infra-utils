@@ -13,9 +13,10 @@ def format_log(log):
         log['actor'].get('email', log['metadata'].get('acted_on_behalf_of')),
         log['metadata'].get('zone_name'),
         log['action'].get('type'),
-        log['metadata'].get('type') or '',
-        log['metadata'].get('name') or '',
-        log['metadata'].get('content') or ''
+        log.get('oldValueJson', {}).get('type') or log.get('newValueJson', {}).get('type') or '',
+        log.get('oldValueJson', {}).get('name') or log.get('newValueJson', {}).get('name') or '',
+        log.get('oldValueJson', {}).get('name') or ''
+        #log['metadata'].get('content') or ''
     )
 
 def parse_opts():
@@ -53,11 +54,12 @@ def main():
     if opts.since:
         params['since'] = opts.since
     
-    logs = cf.organizations.audit_logs.get(opts.cf_org_id, params=params)
+    logs = cf.accounts.audit_logs.get(opts.cf_org_id, params=params)
 
     for log in logs:
-        if log['action']['type'] not in opts.actions:
-            continue
+        #if log['action']['type'] not in opts.actions:
+        #    continue
+        #print(json.dumps(log))
         print(format_log(log))
 
 if __name__ == '__main__':
