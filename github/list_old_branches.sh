@@ -4,7 +4,11 @@
 # for B in $(list_old_branches.sh); do git branch --delete "${BRANCH}"; done
 
 function getCommitUnix() {
-    git show --no-patch --no-notes --pretty='%at' ${1}
+    git show --no-patch --no-notes -s --pretty='%at' "origin/${1}" 2>/dev/null
+}
+
+function getCommitAuthorName() {
+    git show --no-patch --no-notes -s --format='%an' "origin/${1}" 2>/dev/null
 }
 
 OLDER_THAN_DAYS="120"
@@ -21,11 +25,17 @@ REMOTE_BRANCHES=$(git ls-remote --heads --heads ${REMOTE} | cut -f2)
 
 for BRANCH in ${REMOTE_BRANCHES}; do
     BRANCH_NAME="${BRANCH/#refs\/heads\/}"
-    if [[ ${BRANCH_NAME} = release* ]]; then
+
+    if [[ ${BRANCH_NAME} =~ ^(release|gh-pages).*$ ]]; then
         continue
     fi
-    COMMIT_DATE_UNIX=$(getCommitUnix remotes/origin/$BRANCH_NAME)
-    if [[ ${COMMIT_DATE_UNIX} < ${OLDER_THAN} ]]; then
-        echo "${BRANCH_NAME}"
+
+    COMMIT_DATE_UNIX=$(getCommitUnix $BRANCH_NAME)
+    AUTHOR_NAME=$(getCommitAuthorName $BRANCH_NAME)
+
+    if [[ -z "${COMMIT_DATE_UNIX}" ]]; then
+        continue
+    elif [[ ${COMMIT_DATE_UNIX} < ${OLDER_THAN} ]]; then
+        printf "%-20s %s\n" "${AUTHOR_NAME}" "${BRANCH_NAME}"
     fi
 done
