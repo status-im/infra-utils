@@ -16,7 +16,7 @@ HELP_DESCRIPTION='This a utility for generating DNS Discovery records'
 HELP_EXAMPLE='Example: ./dnsdisc.py -p 123abc -d nodes.example.org'
 
 # Setup logging.
-log_format = '%(asctime)s [%(levelname)s] %(message)s'
+log_format = '[%(levelname)s] %(message)s'
 logging.basicConfig(level=logging.INFO, format=log_format)
 LOG = logging.getLogger(__name__)
 
@@ -204,7 +204,7 @@ def main():
 
     LOG.debug('Querying TXT DNS records: %s', opts.domain)
     old_records = cf.txt_records(opts.domain)
-    for record in old_records:
+    for record in sorted(old_records):
         LOG.info('Deleting record: %s', record['name'])
         if not opts.dry_run:
             cf.delete(record['id'])
