@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import sys
 import time
 import json
 import consul
@@ -10,6 +11,7 @@ from optparse import OptionParser
 from subprocess import Popen, PIPE
 from contextlib import contextmanager
 
+HOME=os.path.expanduser('~')
 HELP_DESCRIPTION='This a utility for generating DNS Discovery records'
 HELP_EXAMPLE='Example: ./dnsdisc.py -p 123abc -d nodes.example.org'
 
@@ -34,7 +36,7 @@ def parse_opts():
                       help='Consul host.')
     parser.add_option('-P', '--consul-port', default=8500,
                       help='Consul port.')
-    parser.add_option('-T', '--consul-token',
+    parser.add_option('-T', '--consul-token', default=os.environ.get('CONSUL_HTTP_TOKEN'),
                       help='Consul API token.')
     parser.add_option('-n', '--query-service', default='nim-waku-v2-enr',
                       help='Name of Consul service to query.')
@@ -44,12 +46,14 @@ def parse_opts():
                       help='Name of Consul service to query.')
     parser.add_option('-d', '--domain', type='string',
                       help='Fully qualified domain name for the tree root entry.')
-    parser.add_option('-C', '--tree-creator', type='string',
+    parser.add_option('-C', '--tree-creator', default=HOME+'/work/nim-dnsdisc/build/tree_creator',
                       help='Path to tree_creator binary from nim-dnsdisc.')
-    parser.add_option('-p', '--private-key', type='string',
+    parser.add_option('-p', '--private-key', default=os.environ.get('PRIVATE_KEY'),
                       help='Tree creator private key as 64 char hex string.')
     parser.add_option('-l', '--log-level', default='info',
                       help='Change default logging level.')
+    parser.add_option('-x', '--dry-run', action='store_true',
+                      help='Do not delete or create DNS records.')
     
     return parser.parse_args()
 
@@ -81,7 +85,7 @@ class DNSDiscovery:
     @contextmanager
     def start(self, domain, enrs):
         try:
-            self.process = Popen([
+            args = [
                 self.path,
                 "--private-key=%s" % self.private_key,
                 "--rpc-address=%s" % self.host,
@@ -89,7 +93,9 @@ class DNSDiscovery:
                 "--domain=%s" % domain,
             ] + [
                 '--enr-record=' + enr for enr in enrs
-            ], stdout=PIPE)
+            ]
+            LOG.debug('Starting node: %s', ' '.join(args))
+            self.process = Popen(args, stdout=PIPE)
             # Not pretty, but the process needs time to start.
             time.sleep(1)
             yield self.process
@@ -169,6 +175,11 @@ def main():
           'stage': opts.query_stage
         }
     )
+
+    if len(services) == 0:
+        LOG.error('No services found!')
+        sys.exit(1)
+
     for service in services:
         LOG.info('Service found: %s:%s', service['Node'], service['ServiceID'])
         LOG.debug('Service ENR: %s', service['ServiceMeta']['node_enode'])
@@ -185,7 +196,7 @@ def main():
     LOG.debug('Generating DNS records...')
     new_records = dns.generate(opts.domain, service_enrs)
 
-    for record, value in new_records.items():
+    for record, value in sorted(new_records.items()):
         LOG.debug('New DNS Record: %s -> %s', record, value)
 
     LOG.debug('Connecting to CloudFlare: %s', opts.cf_email)
@@ -195,12 +206,16 @@ def main():
     old_records = cf.txt_records(opts.domain)
     for record in old_records:
         LOG.info('Deleting record: %s', record['name'])
-        cf.delete(record['id'])
+        if not opts.dry_run:
+            cf.delete(record['id'])
 
-    for name, value in new_records.items():
+    for name, value in sorted(new_records.items()):
         LOG.info('Creating record: %s', name)
-        cf.create(name, value)
+        if not opts.dry_run:
+            cf.create(name, value)
 
+    if opts.dry_run:
+        LOG.warning('Dry-run mode! No changes made.')
 
 if __name__ == '__main__':
     main()
