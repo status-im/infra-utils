@@ -203,13 +203,20 @@ def main():
     cf = CFManager(opts.cf_email, opts.cf_token, opts.cf_domain)
 
     LOG.debug('Querying TXT DNS records: %s', opts.domain)
-    old_records = cf.txt_records(opts.domain)
-    for record in sorted(old_records):
-        LOG.info('Deleting record: %s', record['name'])
-        if not opts.dry_run:
-            cf.delete(record['id'])
+    raw_old_records = cf.txt_records(opts.domain)
 
-    for name, value in sorted(new_records.items()):
+    old_records_ids = {r['name']: r['id'] for r in raw_old_records}
+    old_records = set((r['name'], r['content']) for r in raw_old_records)
+    new_records = set((k.lower(), v) for k,v in new_records.items())
+
+    # Delete records which changed or are gone.
+    for name, value in sorted(old_records - new_records):
+        LOG.info('Deleting record: %s', name)
+        if not opts.dry_run:
+            cf.delete(old_records_ids[name])
+
+    # Create new records or update old ones.
+    for name, value in sorted(new_records - old_records):
         LOG.info('Creating record: %s', name)
         if not opts.dry_run:
             cf.create(name, value)
