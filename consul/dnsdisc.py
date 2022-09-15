@@ -38,9 +38,9 @@ def parse_opts():
                       help='Consul port.')
     parser.add_option('-T', '--consul-token', default=os.environ.get('CONSUL_HTTP_TOKEN'),
                       help='Consul API token.')
-    parser.add_option('-n', '--query-service', default='nim-waku-v2-enr',
+    parser.add_option('-n', '--query-service', type='string', action="append", default=[],
                       help='Name of Consul service to query.')
-    parser.add_option('-e', '--query-env', default='wakuv2',
+    parser.add_option('-e', '--query-env', default='status',
                       help='Name of Consul service to query.')
     parser.add_option('-s', '--query-stage', default='test',
                       help='Name of Consul service to query.')
@@ -169,15 +169,21 @@ def main():
         token=opts.consul_token,
     )
 
-    LOG.debug('Querying service: %s (%s.%s)',
-             opts.query_service, opts.query_env, opts.query_stage)
-    services = catalog.all_services(
-        opts.query_service,
-        meta={
-          'env': opts.query_env,
-          'stage': opts.query_stage
-        }
-    )
+    if len(opts.query_service) == 0:
+        LOG.error('No service names to query given!')
+        sys.exit(1)
+
+    services = []
+    for service_name in opts.query_service:
+        LOG.debug('Querying service: %s (%s.%s)',
+                 service_name, opts.query_env, opts.query_stage)
+        services.extend(catalog.all_services(
+            service_name,
+            meta={
+              'env': opts.query_env,
+              'stage': opts.query_stage
+            }
+        ))
 
     if len(services) == 0:
         LOG.error('No services found!')
