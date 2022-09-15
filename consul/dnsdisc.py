@@ -120,9 +120,12 @@ class DNSDiscovery:
     def records(self):
         return self._rpc('get_txt_records')['result']
 
+    def enrtree(self):
+        return self._rpc('get_url')['result']
+
     def generate(self, domain, enrs):
         with self.start(domain, enrs):
-            return self.records()
+            return self.records(), self.enrtree()
 
 
 class CFManager:
@@ -194,7 +197,7 @@ def main():
         opts.private_key
     )
     LOG.debug('Generating DNS records...')
-    new_records = dns.generate(opts.domain, service_enrs)
+    new_records, enrtree = dns.generate(opts.domain, service_enrs)
 
     for record, value in sorted(new_records.items()):
         LOG.debug('New DNS Record: %s -> %s', record, value)
@@ -221,6 +224,7 @@ def main():
         if not opts.dry_run:
             cf.create(name, value)
 
+    LOG.info('URL: %s', enrtree)
     if opts.dry_run:
         LOG.warning('Dry-run mode! No changes made.')
 
