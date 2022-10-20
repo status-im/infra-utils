@@ -15,7 +15,7 @@ def format_csv(record):
     )
 
 def format_table(record):
-    return '{:>20} {:1} {:>6} {:30} {:30}'.format(
+    return '{:>20} {:1} {:>6} {:30} {}'.format(
         record['id'],
         ('P' if record['proxied'] else ''),
         record['type'],
@@ -52,6 +52,8 @@ def main():
         formatter = format_csv
 
     for r in records:
+        if opts.type and r['type'] != opts.type:
+            continue
         print(formatter(r))
 
 if __name__ == '__main__':
