@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import json
 import CloudFlare
 from optparse import OptionParser
 
@@ -23,6 +24,13 @@ def format_table(record):
         record['content'],
     )
 
+def format_json(record):
+    return json.dumps(
+        {k: record[k] for k in (
+            'id', 'proxied', 'type', 'name', 'content'
+        )}
+    )
+
 def parse_opts():
     parser = OptionParser(description=HELP_DESCRIPTION, epilog=HELP_EXAMPLE)
     parser.add_option('-M', '--mail', dest='cf_email', default='jakub@status.im',
@@ -31,12 +39,19 @@ def parse_opts():
                       help='CloudFlare API token for auth (env CF_TOKEN used). (default: %default)')
     parser.add_option('-d', '--domain', dest='cf_domain', default='status.im',
                       help='Specify which domain to query for. (default: %default)')
-    parser.add_option('-t', '--type',
+    parser.add_option('-t', '--type', type=str,
                       help='Type of DNS records to query for.')
     parser.add_option('-c', '--csv', action='store_true',
                       help='Format records as a CSV file.')
+    parser.add_option('-j', '--json', action='store_true',
+                      help='Format records as a CSV file.')
     
-    return parser.parse_args()
+    opts, args = parser.parse_args()
+
+    if opts.csv and opts.json:
+        parser.error('Options ---csv and --json are mutually exclusive.')
+    
+    return opts, args
 
 def main():
     (opts, args) = parse_opts()
@@ -50,6 +65,8 @@ def main():
     formatter = format_table
     if opts.csv:
         formatter = format_csv
+    elif opts.json:
+        formatter = format_json
 
     for r in records:
         if opts.type and r['type'] != opts.type:
