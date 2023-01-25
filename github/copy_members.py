@@ -34,15 +34,13 @@ def main():
     in_org = g.get_organization(opts.input_org)
     out_org = g.get_organization(opts.output_org)
 
-    invitations = [i.login for i in out_org.invitations()]
-
     for team in in_org.get_teams():
         print(' --- Team: %s' % team.slug)
         if opts.teams is None or team.name in opts.teams or team.slug in opts.teams:
             for member in team.get_members():
                     if out_org.has_in_members(member):
                         print('%s already a member' % member.login)
-                    elif member.login in invitations:
+                    elif member.login in [i.login for i in out_org.invitations()]:
                         print('%s already invited' % member.login)
                     else:
                         if not opts.dry_run:
