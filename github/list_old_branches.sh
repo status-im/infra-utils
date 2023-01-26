@@ -36,6 +36,6 @@ for BRANCH in ${REMOTE_BRANCHES}; do
     if [[ -z "${COMMIT_DATE_UNIX}" ]]; then
         continue
     elif [[ ${COMMIT_DATE_UNIX} < ${OLDER_THAN} ]]; then
-        printf "%-20s %s\n" "${AUTHOR_NAME}" "${BRANCH_NAME}"
+        printf "%-35s %s\n" "${AUTHOR_NAME}" "${BRANCH_NAME}"
     fi
 done
