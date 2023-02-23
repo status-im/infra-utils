@@ -53,6 +53,9 @@ def main():
     # JSON for Ansible
     out = {'_meta':{'hostvars':{}}}
     for node in nodes:
+        if node['Meta'] is None:
+            print('No Node Meta for host: %s' % node['Node'], file=sys.stderr)
+            continue
         out['_meta']['hostvars'][node['Node']] = {
             "dns_entry":    '%s.%s' % (node['Node'], opts.hosts_domain),
             "hostname":     node['Node'],
