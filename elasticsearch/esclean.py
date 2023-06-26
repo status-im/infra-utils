@@ -71,7 +71,7 @@ def main():
     elif opts.program:
         queries.append({'term': {'program': opts.program}})
     if opts.fleet:
-        queries.append({'term': {'fleet': opts.fleet}})
+        queries.append({'match': {'fleet': opts.fleet}})
     if opts.severity:
         queries.append({'term': {'severity_name': opts.severity}})
     if opts.logsource_ip:
