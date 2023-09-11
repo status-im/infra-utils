@@ -33,7 +33,7 @@ def main():
           repo.archived,
           not repo.private,
           repo.name.endswith('-pass'),
-          repo.name.contains('-ghsa-'),
+          '-ghsa-' in repo.name,
         ])
         if skip:
             continue
