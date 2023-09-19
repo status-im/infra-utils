@@ -34,7 +34,7 @@ def main():
         skip = any([
           repo.fork,
           repo.archived,
-          repo.name in ['process-models', 'infra-spiff-workflow'],
+          repo.name in ['process-models', 'infra-spiff-workflow', 'nim-raft', 'nim-eth-verkle'],
           '-ghsa-' in repo.name,
         ])
         if skip:
