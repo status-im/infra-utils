@@ -7,6 +7,7 @@ import consul
 import logging
 import requests
 import CloudFlare
+# TODO: optparse is depricated
 from optparse import OptionParser
 from subprocess import Popen, PIPE
 from contextlib import contextmanager
@@ -38,12 +39,14 @@ def parse_opts():
                       help='Consul port.')
     parser.add_option('-T', '--consul-token', default=os.environ.get('CONSUL_HTTP_TOKEN'),
                       help='Consul API token.')
-    parser.add_option('-n', '--query-service', type='string', action="append", default=[],
-                      help='Name of Consul service to query.')
+    parser.add_option('-n', '--query-service-name', type='string',
+                      help='Name of Consul service name to query.')
+    parser.add_option('-i', '--query-service-id', type='string',
+                      help='Name of Consul service id to query.')
     parser.add_option('-e', '--query-env', default='status',
-                      help='Name of Consul service to query.')
+                      help='Name of Consul service env to query.')
     parser.add_option('-s', '--query-stage', default='test',
-                      help='Name of Consul service to query.')
+                      help='Name of Consul service stage to query.')
     parser.add_option('-d', '--domain', type='string',
                       help='Fully qualified domain name for the tree root entry.')
     parser.add_option('-C', '--tree-creator', default=HOME+'/work/nim-dnsdisc/build/tree_creator',
@@ -54,7 +57,7 @@ def parse_opts():
                       help='Change default logging level.')
     parser.add_option('-x', '--dry-run', action='store_true',
                       help='Do not delete or create DNS records.')
-    
+
     return parser.parse_args()
 
 class ConsulCatalog:
@@ -64,13 +67,13 @@ class ConsulCatalog:
     def dcs(self):
         return self.client.catalog.datacenters()
 
-    def services(self, service, dc, meta={}):
-        return self.client.catalog.service(service, dc=dc, node_meta=meta)
+    def services(self, service_name, dc, meta={}):
+        return self.client.catalog.service(service_name, dc=dc, node_meta=meta)
 
-    def all_services(self, service, meta={}):
+    def all_services(self, service_name, meta={}):
         rval = []
         for dc in self.dcs():
-            rval.extend(self.services(service, dc, meta)[1])
+            rval.extend(self.services(service_name, dc, meta)[1])
         return rval
 
 
@@ -80,7 +83,7 @@ class DNSDiscovery:
         self.host = host
         self.port = port
         self.private_key = private_key
-        self.url = 'http://%s:%d' % (self.host, self.port)
+        self.url = 'http://%s:%s' % (self.host, self.port)
 
     @contextmanager
     def start(self, domain, enrs):
@@ -157,7 +160,7 @@ class CFManager:
 
 
 def main():
-    (opts, args) = parse_opts()
+    (opts, _) = parse_opts()
 
     LOG.setLevel(opts.log_level.upper())
 
@@ -169,25 +172,30 @@ def main():
         token=opts.consul_token,
     )
 
-    if len(opts.query_service) == 0:
-        LOG.error('No service names to query given!')
+    if opts.query_service_name is None:
+        LOG.error('No service name to query given!')
         sys.exit(1)
 
-    services = []
-    for service_name in opts.query_service:
-        LOG.debug('Querying service: %s (%s.%s)',
-                 service_name, opts.query_env, opts.query_stage)
-        services.extend(catalog.all_services(
-            service_name,
-            meta={
-              'env': opts.query_env,
-              'stage': opts.query_stage
-            }
-        ))
+    LOG.debug('Querying service: %s (%s.%s)',
+              opts.query_service_name, opts.query_env, opts.query_stage)
+    services = catalog.all_services(
+        opts.query_service_name,
+        meta={
+            'env': opts.query_env,
+            'stage': opts.query_stage
+        }
+    )
 
     if len(services) == 0:
         LOG.error('No services found!')
         sys.exit(1)
+
+    if opts.query_service_id is not None:
+        LOG.debug('Filtering by ServiceID: %s', opts.query_service_id)
+        services = [
+            x for x in services
+            if x['ServiceID'] == opts.query_service_id
+        ]
 
     for service in services:
         LOG.info('Service found: %s:%s', service['Node'], service['ServiceID'])
