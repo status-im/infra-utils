@@ -34,7 +34,7 @@ def parse_opts():
                       help='Delete matching documents.')
     parser.add_option('-q', '--query', type='str',
                       help='Query matching documents.')
-    
+
     return parser.parse_args()
 
 def print_logs(docs):
@@ -53,16 +53,15 @@ def main():
     (opts, args) = parse_opts()
 
     es = Elasticsearch(
-        [{ 'host': opts.es_host,
-           'port': opts.es_port }],
-        timeout=1200,
+        hosts=[{ 'host': opts.es_host, 'port': opts.es_port, 'scheme': 'http'}],
+        request_timeout=1200,
         retry_on_timeout=True
     )
-    
+
     print('Cluster: {}'.format(es.info().get('cluster_name')))
-    
+
     indices = es.indices.get(index=opts.index_pattern).keys()
-    
+
     queries = []
     if opts.tag:
         queries.append({'match': {'tags': opts.tag}})
