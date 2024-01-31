@@ -26,6 +26,8 @@ def parse_opts():
                       help='Fleet to query for.')
     parser.add_option('-s', '--severity',
                       help='Log severity/level.')
+    parser.add_option('-L', '--logsource',
+                      help='Hostname of log source.')
     parser.add_option('-I', '--logsource-ip',
                       help='IP of log source.')
     parser.add_option('-o', '--older-than',
@@ -73,6 +75,8 @@ def main():
         queries.append({'match': {'fleet': opts.fleet}})
     if opts.severity:
         queries.append({'term': {'severity_name': opts.severity}})
+    if opts.logsource:
+        queries.append({'match': {'logsource': opts.logsource}})
     if opts.logsource_ip:
         queries.append({'term': {'logsource_ip': opts.logsource_ip}})
     if opts.message:
