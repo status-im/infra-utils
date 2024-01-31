@@ -45,6 +45,10 @@ def main():
         if any(skip_conditions):
             continue
 
+        # Skip changing permissions if user is already there.
+        if team in repo.get_teams():
+            continue
+
         print(' - %s' % repo.name)
         team.update_team_repository(repo, opts.perm)
 
