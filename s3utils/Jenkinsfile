@@ -1,0 +1,79 @@
+#!/usr/bin/env groovy
+library 'status-jenkins-lib@v1.8.15'
+
+def defaulBuckets = [
+  'status-im-nightlies',
+  'status-im-builds',
+  'status-im-mobile-prs',
+  'status-im-desktop-prs',
+  'status-im-prs',
+]
+
+def parallelStagesMap = params.BUCKETS.split('\n').collectEntries {
+  ["${it}": generateStage(it.trim())]
+}
+
+pipeline {
+  agent { label 'linux' }
+
+  parameters {
+    text(
+      name: 'BUCKETS',
+      description: 'Comma separated list of buckets to clean.',
+      defaultValue: "${defaulBuckets.join('\n')}",
+    )
+    string(
+      name: 'OLDER_THAN_DAYS',
+      description: 'Delete builds older than this many days.',
+      defaultValue: "90",
+    )
+    booleanParam(
+      name: 'DRY_RUN',
+      description: 'Run without deleting anything.',
+      defaultValue: false,
+    )
+  }
+
+  triggers {
+    cron('@weekly')
+  }
+
+  options {
+    disableConcurrentBuilds()
+    /* manage how many builds we keep */
+    buildDiscarder(logRotator(daysToKeepStr: '30'))
+    /* Prevent Jenkins jobs from running forever */
+    timeout(time: 60, unit: 'MINUTES')
+  }
+
+  stages {
+    stage('Cleanup') {
+      steps { script {
+        withCredentials([usernamePassword(
+          credentialsId: 'digital-ocean-access-keys',
+          usernameVariable: 'DO_ID',
+          passwordVariable: 'DO_SECRET'
+        )]) {
+          parallel parallelStagesMap
+        }
+      } }
+    }
+  }
+  post {
+    cleanup { cleanWs() }
+  }
+}
+
+def generateStage(bucket) {
+  return {
+    stage(bucket) {
+      sh """#!/usr/bin/env bash
+        ${nix._sourceProfileInline()}
+        ./s3utils/delete.py \
+          --older-than=${params.OLDER_THAN_DAYS} \
+          --bucket=${bucket} \
+          ${params.DRY_RUN ? '--dry-run' : ''}
+      """
+    }
+  }
+}
