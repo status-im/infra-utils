@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 import os
+import warnings
 from retry import retry
 from optparse import OptionParser
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import ConflictError
+from elasticsearch.exceptions import ElasticsearchWarning
+
+# Ignore warnings about disabled security features.
+warnings.simplefilter('ignore', ElasticsearchWarning)
 
 HELP_DESCRIPTION='This is a simple utility for cleaning ElasticSearch indices.'
 HELP_EXAMPLE='Example: ./esclean.py -i "logstash-2019.11.*" -p beacon -d'
@@ -49,7 +54,7 @@ def print_logs(docs):
 
 @retry(ConflictError, tries=5, delay=120, backoff=2)
 def delete_retry(es, index, body):
-    return es.delete_by_query(index=index, body=body)
+    return es.delete_by_query(index=index, **body)
 
 def main():
     (opts, args) = parse_opts()
@@ -94,7 +99,7 @@ def main():
         body = {'query': {'bool': {'must': queries}}}
 
     for index in indices:
-        resp = es.count(index=index, body=body)
+        resp = es.count(index=index, **body)
         count = resp.get('count')
         print('{:22} count: {:8}'.format(index, count))
 
@@ -102,7 +107,7 @@ def main():
             rval = delete_retry(es, index, body)
             rval2 = es.indices.forcemerge(
                 index=index,
-                params={'only_expunge_deletes':'true'}
+                only_expunge_deletes=True,
             )
             print('{:22} Deleted: {:10} Failed: {}'.format(index, rval['deleted'], rval2['_shards']['failed']))
         #else:
