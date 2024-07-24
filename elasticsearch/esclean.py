@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import os
 import warnings
-from retry import retry
+from retry.api import retry_call
 from optparse import OptionParser
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import ConflictError
@@ -21,6 +21,12 @@ def parse_opts():
                       help='ElasticSearch port.')
     parser.add_option('-T', '--timeout', dest='es_timeout', default=3000,
                       help='ElasticSearch timeout.')
+    parser.add_option('-R', '--retries', dest='es_retries', default=5,
+                      help='ElasticSearch retries.')
+    parser.add_option('-D', '--delay', dest='es_delay', default=120,
+                      help='ElasticSearch retry delay.')
+    parser.add_option('-B', '--backoff', dest='es_backoff', default=2,
+                      help='ElasticSearch retry backoff.')
     parser.add_option('-i', '--index-pattern', default='logstash-*',
                       help='Patter for matching indices.')
     parser.add_option('-t', '--tag',
@@ -54,9 +60,14 @@ def print_logs(docs):
             log.get('logsource', 'unknown'), log['message'][:2000]
         ))
 
-@retry(ConflictError, tries=5, delay=120, backoff=2)
-def delete_retry(es, index, body):
-    return es.delete_by_query(index=index, **body)
+def delete_retry(es, index, body, tries=5, delay=120, backoff=2):
+    return retry_call(
+        es.delete_by_query,
+        fkwargs={'index': index, 'body': body},
+        tries=tries,
+        delay=delay,
+        backoff=backoff
+    )
 
 def main():
     (opts, args) = parse_opts()
@@ -106,7 +117,12 @@ def main():
         print('{:22} count: {:8}'.format(index, count))
 
         if opts.delete and count > 0:
-            rval = delete_retry(es, index, body)
+            rval = delete_retry(
+                es, index, body,
+                tries=opts.es_retries,
+                delay=opts.es_delay,
+                backoff=opts.es_backoff
+            )
             rval2 = es.indices.forcemerge(
                 index=index,
                 only_expunge_deletes=True,
