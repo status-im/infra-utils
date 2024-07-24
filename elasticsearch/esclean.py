@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import logging
 import warnings
 from retry.api import retry_call
 from optparse import OptionParser
@@ -9,6 +10,12 @@ from elasticsearch.exceptions import ElasticsearchWarning
 
 # Ignore warnings about disabled security features.
 warnings.simplefilter('ignore', ElasticsearchWarning)
+
+# Setup logging.
+log_format = '[%(levelname)s] %(message)s'
+logging.basicConfig(level=logging.INFO, format=log_format)
+logging.getLogger('elastic_transport.transport').setLevel(logging.WARNING)
+LOG = logging.getLogger(__name__)
 
 HELP_DESCRIPTION='This is a simple utility for cleaning ElasticSearch indices.'
 HELP_EXAMPLE='Example: ./esclean.py -i "logstash-2019.11.*" -p beacon -d'
@@ -49,13 +56,15 @@ def parse_opts():
                       help='Delete matching documents.')
     parser.add_option('-q', '--query', type='str',
                       help='Query matching documents.')
+    parser.add_option('-l', '--log-level', default='info',
+                      help='Change default logging level.')
 
     return parser.parse_args()
 
 def print_logs(docs):
     for doc in docs:
         log = doc['_source']
-        print('{:26} {:21} {:38} {}'.format(
+        LOG.info('{:26} {:21} {:38} {}'.format(
             log['@timestamp'], log.get('program', 'unknown'),
             log.get('logsource', 'unknown'), log['message'][:2000]
         ))
@@ -72,13 +81,15 @@ def delete_retry(es, index, body, tries=5, delay=120, backoff=2):
 def main():
     (opts, args) = parse_opts()
 
+    LOG.setLevel(opts.log_level.upper())
+
     es = Elasticsearch(
         hosts=[{ 'host': opts.es_host, 'port': opts.es_port, 'scheme': 'http'}],
         request_timeout=opts.es_timeout,
         retry_on_timeout=True
     )
 
-    print('Cluster: {}'.format(es.info().get('cluster_name')))
+    LOG.info('Cluster: {}'.format(es.info().get('cluster_name')))
 
     indices = es.indices.get(index=opts.index_pattern).keys()
 
@@ -114,7 +125,7 @@ def main():
     for index in indices:
         resp = es.count(index=index, **body)
         count = resp.get('count')
-        print('{:22} count: {:8}'.format(index, count))
+        LOG.info('{:22} count: {:8}'.format(index, count))
 
         if opts.delete and count > 0:
             rval = delete_retry(
@@ -127,10 +138,7 @@ def main():
                 index=index,
                 only_expunge_deletes=True,
             )
-            print('{:22} Deleted: {:10} Failed: {}'.format(index, rval['deleted'], rval2['_shards']['failed']))
-        #else:
-        #    resp = es.search(index=index, body=body)
-        #    print_logs(resp['hits']['hits'])
+            LOG.info('{:22} Deleted: {:10} Failed: {}'.format(index, rval['deleted'], rval2['_shards']['failed']))
 
 if __name__ == '__main__':
     main()
