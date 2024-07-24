@@ -19,6 +19,8 @@ def parse_opts():
                       help='ElasticSearch host.')
     parser.add_option('-P', '--port', dest='es_port', default=9200,
                       help='ElasticSearch port.')
+    parser.add_option('-T', '--timeout', dest='es_timeout', default=3000,
+                      help='ElasticSearch timeout.')
     parser.add_option('-i', '--index-pattern', default='logstash-*',
                       help='Patter for matching indices.')
     parser.add_option('-t', '--tag',
@@ -61,7 +63,7 @@ def main():
 
     es = Elasticsearch(
         hosts=[{ 'host': opts.es_host, 'port': opts.es_port, 'scheme': 'http'}],
-        request_timeout=1200,
+        request_timeout=opts.es_timeout,
         retry_on_timeout=True
     )
 
