@@ -33,6 +33,14 @@ if [[ -n $3 ]]; then
   TYPE="$3"
 fi
 
+object=$(bw get item ${BITWARDEN_PATH})
+notes=$(echo $object | jq -r '.notes')
+
+if [[ $notes == *"Migrated to Vault"* ]]; then
+  echo "Secret already migrated"
+  exit 0
+fi
+
 if [[ $TYPE == "field" ]]; then
   critera=".fields | (map({ (.name|tostring): (.value|tostring) })| add )"
 elif [[ $TYPE == "pwd" ]]; then
@@ -40,4 +48,8 @@ elif [[ $TYPE == "pwd" ]]; then
 fi
 
 echo "Writing Bitwarden ${TYPE} of ${BITWARDEN_PATH} into ${VAULT} of ${VAULT_PATH}"
-bw get item ${BITWARDEN_PATH} | jq -r "${critera}" | vault kv put -mount=${VAULT} $VAULT_PATH -
+echo ${object} | jq -r "${critera}" | vault kv put -mount=${VAULT} $VAULT_PATH -
+# Update notes
+timestamp=$(date  +%F)
+jq_note=".notes=\"${notes} Migrated to Vault - ${timestamp}\""
+echo ${object} | jq "$jq_note" | bw encode |  bw edit item $(echo $object | jq -r '.id')
