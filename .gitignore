@@ -2,6 +2,7 @@ cloudflare/CloudFlare
 nix/nix-*.sh
 tcp-ping/tcp-ping-*
 .terraform
+.venv
 terraform.tfvars
 terraform.tfstate*
 *.bz2
