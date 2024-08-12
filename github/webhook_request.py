@@ -34,6 +34,10 @@ def parse_args():
                         help='Webhook Secret.')
     parser.add_argument('-t', '--timeout', default=5,
                         help='Webhook request timeout.')
+    parser.add_argument('-n', '--no-verify', action='store_true',
+                        help='Do not verify SSL certificate.')
+    parser.add_argument('-x', '--host-header', default=None,
+                        help='Host HTTP header value.')
 
     args = parser.parse_args()
 
@@ -49,6 +53,7 @@ def main():
     digest = lambda algo: hmac.new(secret, data, algo).hexdigest()
 
     headers = {
+        'Host':                args.host_header,
         'Content-Type':        'application/json',
         'X-Hub-Signature':     'sha1=%s'   % digest(hashlib.sha1),
         'X-Hub-Signature-256': 'sha256=%s' % digest(hashlib.sha256),
@@ -62,6 +67,7 @@ def main():
             data=data,
             headers=headers,
             timeout=args.timeout,
+            verify=not args.no_verify,
         )
     except requests.exceptions.ConnectionError as ex:
         print(ex)
