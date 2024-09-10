@@ -32,7 +32,7 @@ def parse_args():
                         help='Webhook Secret.')
     parser.add_argument('-p', '--payload', default=PAYLOAD,
                         help='Webhook Secret.')
-    parser.add_argument('-t', '--timeout', default=5,
+    parser.add_argument('-t', '--timeout', type=int, default=5,
                         help='Webhook request timeout.')
     parser.add_argument('-n', '--no-verify', action='store_true',
                         help='Do not verify SSL certificate.')
