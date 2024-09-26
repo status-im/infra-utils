@@ -13,7 +13,8 @@ shift
 for DIR in $(ls -d ~/work/infra-*); do
     [[ "${DIR}" =~ .*/infra-role-.*$ ]] && continue
     [[ "${DIR}" =~ .*/infra-tf-.*$ ]] && continue
-    [[ "${DIR}" =~ .*/infra-(lido|utils|pass)$ ]] && continue
+    [[ "${DIR}" =~ .*/infra-wazuh-.*$ ]] && continue
+    [[ "${DIR}" =~ .*/infra-(lido|utils|pass|template)$ ]] && continue
     echo '---------------------------------'
     pushd "${DIR}"
     git reset
