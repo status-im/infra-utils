@@ -1,55 +1,64 @@
 #!/usr/bin/env bash
-
+set -e
 
 if [[ -z $VAULT_TOKEN ]]; then
-  echo "Please set the varaible $VAULT_TOKEN"
+  echo "Please set the variable $VAULT_TOKEN"
   exit 1
 fi
 if [[ -z $VAULT_ADDR ]]; then
-  echo "Please set the varaible $VAULT_ADDR"
+  echo "Please set the variable $VAULT_ADDR"
   exit 1
 fi
 
 if [[ -z "${*}" ]]; then
-    echo "Usage: migration-bitwarden.sh <bitwarden_path> <vault_path> <type>"
+    echo "Usage: migration-bitwarden.sh <vault_path> <bitwarden_path> <bitwarden_path> <bitwarden_path>"
     echo
-    echo " - bitwarden_path: path of the secret in bitwarden"
     echo " - vault_path: path of the secret in vault"
-    echo " - type: type of secret (field / pwd), default value: pwd"
-    echo 
-    echo "Ex: migration-bitwarden.sh fleet/waku/test/nodekeys waku/test/nodekeys field"
-    echo "Or"
-    echo "migration-bitwarden.sh fleet/waku/test/db/nim-waku waku/test/db/nim-waku"
-    echo 
+    echo " - bitwarden_path: list of path of secrets in bitwarden"
+    echo
+    echo "Example:"
+    echo " - migration-bitwarden.sh path/in/vault secret/in/bitwarden"
+    echo " - migration-bitwarden.sh path/in/vault secret/in/bitwarden other/secret/in/bitwarden"
+    echo
     exit 1
 fi
 
-BITWARDEN_PATH="$1"
-VAULT_PATH="$2"
-TYPE="pwd"
+VAULT_PATH="$1"
+shift
 VAULT="secret"
+params={}
+for BW_PATH in $@; do
+  echo "Reading secret from $BW_PATH"
+  object=$(bw get item ${BW_PATH})
+  notes=$(echo $object | jq -r '.notes')
 
-if [[ -n $3 ]]; then
-  TYPE="$3"
-fi
+  if [[ $notes == *"Migrated to Vault"* ]]; then
+    echo "Secret already migrated"
+    exit 0
+  fi
 
-object=$(bw get item ${BITWARDEN_PATH})
-notes=$(echo $object | jq -r '.notes')
+  if [[ $(echo $object | jq -e 'has("fields")') == true ]]; then
+    echo " - Reading fields groups"
+    critera=".fields | (map({ (.name|tostring): (.value|tostring) })| add )"
+    tmp=$(echo "${object}" | jq -r "${critera}")
+    params=$(echo "${params} ${tmp}" | jq -s add)
+  fi
+  if [[ $(echo $object | jq -e 'has("login")') == true ]]; then
+    echo " - Reading login groups"
+    critera=".login | {username: .username, password: .password}"
+    tmp=$(echo "${object}" | jq -r "${critera}")
+    params=$(echo "${params} ${tmp}" | jq -s add)
+  fi
+done
+echo "${params}" | vault kv put -mount=${VAULT} $VAULT_PATH -
 
-if [[ $notes == *"Migrated to Vault"* ]]; then
-  echo "Secret already migrated"
-  exit 0
-fi
 
-if [[ $TYPE == "field" ]]; then
-  critera=".fields | (map({ (.name|tostring): (.value|tostring) })| add )"
-elif [[ $TYPE == "pwd" ]]; then
-  critera=".login | {username: .username, password: .password}"
-fi
-
-echo "Writing Bitwarden ${TYPE} of ${BITWARDEN_PATH} into ${VAULT} of ${VAULT_PATH}"
-echo ${object} | jq -r "${critera}" | vault kv put -mount=${VAULT} $VAULT_PATH -
-# Update notes
-timestamp=$(date  +%F)
-jq_note=".notes=\"${notes} Migrated to Vault - ${timestamp}\""
-echo ${object} | jq "$jq_note" | bw encode |  bw edit item $(echo $object | jq -r '.id')
+# Notes update to indicate password migration
+for BW_PATH in $@; do
+  object=$(bw get item ${BW_PATH})
+  notes=$(echo $object | jq -r '.notes')
+  # Update notes
+  timestamp=$(date +%F)
+  jq_note=".notes=\"${notes} Migrated to Vault - ${timestamp}\""
+  echo ${object} | jq "$jq_note" | bw encode | bw edit item $(echo $object | jq -r '.id')
+done
