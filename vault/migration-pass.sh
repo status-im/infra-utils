@@ -4,11 +4,11 @@ set -e
 #
 
 if [[ -z $VAULT_TOKEN ]]; then
-  echo "Please set the variable $VAULT_TOKEN"
+  echo "Please set the variable VAULT_TOKEN" >&2
   exit 1
 fi
 if [[ -z $VAULT_ADDR ]]; then
-  echo "Please set the variable $VAULT_ADDR"
+  echo "Please set the variable VAULT_ADDR" >&2
   exit 1
 fi
 
