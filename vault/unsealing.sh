@@ -28,7 +28,7 @@ nc -z "${CONSUL_HOST}" "${CONSUL_PORT}" 2>/dev/null \
 # Prompt for shard unseal key if unseal argument is used.
 unseal_key=''
 if [[ $# == 1 && $1 == "unseal" ]]; then
-  read -p "Provide unseal shard key: " unseal_key
+  read -s -p "Provide unseal shard key: " unseal_key
 fi
 
 # Fetching Vault address from Consul
