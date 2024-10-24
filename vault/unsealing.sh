@@ -21,16 +21,16 @@ for VAR in $ENV_VARS; do
   [[ ! -v $VAR ]] && { help; exit 1; }
 done
 
+# Verfy Consul API is available.
+nc -z "${CONSUL_HOST}" "${CONSUL_PORT}" 2>/dev/null \
+    || { echo "ERROR: Setup SSH tunnel to Consul ${CONSUL_PORT} port!" >&2; exit 1; }
+
+# Prompt for shard unseal key if unseal argument is used.
 unseal_key=''
 if [[ $# == 1 && $1 == "unseal" ]]; then
   read -p "Provide unseal shard key: " unseal_key
 fi
 
-# Verfy Consul API is available.
-nc -z "${CONSUL_HOST}" "${CONSUL_PORT}" 2>/dev/null \
-    || { echo "ERROR: Setup SSH tunnel to Consul ${CONSUL_PORT} port!" >&2; exit 1; }
-
-# 
 # Fetching Vault address from Consul
 vault_addr=""
 readarray -t DCS < <(curl -s "${CONSUL_URL}/datacenters" | jq -r '.[]')
