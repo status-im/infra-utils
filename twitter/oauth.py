@@ -36,6 +36,7 @@ oauth2_user_handler = tweepy.OAuth2UserHandler(
     scope=[
         "tweet.read",
         "users.read",
+        "space.read",
         "offline.access"
     ],
     client_secret=os.environ.get("CLIENT_SECRET")
