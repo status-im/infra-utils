@@ -2,10 +2,15 @@
 set -euo pipefail
 
 function help() {
-    echo 'Usage: ./sync_template.sh "my commit message" file/to/copy another/file/to/copy ...'
+    echo 'Usage: ./sync_template.sh [-p] "my commit message" file/to/copy another/file/to/copy ...'
 }
 
 [[ "$#" -lt 2 ]] && { help; exit 1; }
+GIT_PUSH=0
+if [[ "$1" == '-p' ]]; then
+    GIT_PUSH=1
+    shift
+fi
 
 # First argument is the message
 COMMIT_MESSAGE="${1}"
@@ -21,6 +26,7 @@ for DIR in $(ls -d ~/work/infra-*); do
     if git -C "${DIR}" log --grep "${COMMIT_MESSAGE}" | grep commit >/dev/null; then
         echo "Commit already exists."
         git -C "${DIR}" status -sb
+        [[ "${GIT_PUSH}" -eq 1 ]] && git -C "${DIR}" push
         continue
     fi
     pushd "${DIR}" >/dev/null
