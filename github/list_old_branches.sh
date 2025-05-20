@@ -26,7 +26,7 @@ REMOTE_BRANCHES=$(git ls-remote --heads --heads ${REMOTE} | cut -f2)
 for BRANCH in ${REMOTE_BRANCHES}; do
     BRANCH_NAME="${BRANCH/#refs\/heads\/}"
 
-    if [[ ${BRANCH_NAME} =~ ^(release|gh-pages).*$ ]]; then
+    if [[ ${BRANCH_NAME} =~ ^(master|release|gh-pages).*$ ]]; then
         continue
     fi
 
@@ -36,6 +36,6 @@ for BRANCH in ${REMOTE_BRANCHES}; do
     if [[ -z "${COMMIT_DATE_UNIX}" ]]; then
         continue
     elif [[ ${COMMIT_DATE_UNIX} < ${OLDER_THAN} ]]; then
-        printf "%-35s %s\n" "${AUTHOR_NAME}" "${BRANCH_NAME}"
+        printf "%-50s %s\n" "${BRANCH_NAME}" "${AUTHOR_NAME}"
     fi
 done
