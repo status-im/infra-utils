@@ -57,6 +57,6 @@ done
 echo "Vaults status"
 echo ""
 echo "$result" \
-    | jq -r '.[] | [.hostname, .sealed, .progress] | @csv' \
-    | column -s, -t -N Hostname,Sealed,Progress \
+    | (echo "Hostname,Sealed,Progress"; jq -r '.[] | [.hostname, .sealed, .progress] | @csv') \
+    | column -s, -t \
     | sed -e 's,false,\x1b[32m&\x1b[0m,' -e 's,true,\x1b[31m&\x1b[0m,'
