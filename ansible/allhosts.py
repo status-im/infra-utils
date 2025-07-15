@@ -20,9 +20,9 @@ def parse_opts():
     # WARNING: The --list flag is mandatory for use with Ansible. We ignore it.
     parser.add_option('-l', '--list', action='store_true',
                       help='Mandatory flag for Ansible. Ignored.')
-    parser.add_option('-d', '--hosts-domain', default='statusim.net',
+    parser.add_option('-d', '--hosts-domain', default='status.im',
                       help='Domain to append to hostnames.')
-    parser.add_option('-u', '--consul-url', default='https://consul.statusim.net:8400',
+    parser.add_option('-u', '--consul-url', default='https://consul-api.infra.status.im:8400',
                       help='Name of virtual network interface.')
     parser.add_option('-c', '--cert-chain', default='ansible/files/consul-ca.crt',
                       help='Path to Consul certificate CA chain.')
