@@ -77,6 +77,12 @@ def main():
         )
         fleet_group['hosts'].append(node['Node'])
 
+        stage_group = out.setdefault(
+            node['Meta']['stage'],
+            {'children': [], 'hosts': [], 'vars': {} },
+        )
+        stage_group['hosts'].append(node['Node'])
+
     out['all'] = { 'hosts': [node['Node'] for node in nodes] }
 
     print(json.dumps(out, indent=2))
