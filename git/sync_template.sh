@@ -12,6 +12,7 @@ if [[ "$1" == '-p' ]]; then
     shift
 fi
 
+STASHED=0
 # First argument is the message
 COMMIT_MESSAGE="${1}"
 shift
@@ -33,7 +34,10 @@ for DIR in $(ls -d ~/work/infra-*); do
 
     git checkout master
     git reset
-    git status -s >/dev/null && git stash -u
+    if git status -s >/dev/null; then
+        STASHED=1
+        git stash -u
+    fi
     git fetch --verbose origin $(git rev-parse --abbrev-ref HEAD)
     git rebase origin/$(git rev-parse --abbrev-ref HEAD)
 
@@ -49,6 +53,8 @@ for DIR in $(ls -d ~/work/infra-*); do
         git commit -m "${COMMIT_MESSAGE}" && { git show --stat; }
     fi
 
-    git stash apply || true
+    if [[ "${STASHED}" -eq 1 ]]; then
+        git stash apply
+    fi
     popd >/dev/null
 done
