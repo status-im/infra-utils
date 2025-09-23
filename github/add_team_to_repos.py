@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 
 import os
+import re
 import sys
 import github
 from github import Github
 from optparse import OptionParser
+
+# WARNING: Calling API across orgs can result in 404 due to lack of permissions.
 
 HELP_DESCRIPTION='This a utility for adding a team to all GitHub repos of an org.'
 HELP_EXAMPLE='Example: ./add_to_private.py -o "waku-org" -u "devops"'
@@ -17,12 +20,17 @@ def parse_opts():
                       help='GitHub team to grant access to all repos in given org.')
     parser.add_option('-p', '--perm', default='pull',
                       help='Permission to give: pull, triage, push, maintain, admin')
+    parser.add_option('-r', '--repos-file',
+                      help='File containign list of repo names or URLs.')
     parser.add_option('-T', '--token', default=os.environ['GH_TOKEN'],
                       help='GitHub API token to query for repos.')
-    parser.add_option('-d', '--debug', default=False, action='store_true', 
+    parser.add_option('-d', '--debug', default=False, action='store_true',
                       help='Print debug messages for GitHub calls.')
 
     return parser.parse_args()
+
+def sanitize(line):
+    return re.search(r'([^/]+?)/([^/]+?)$', line)[0].removesuffix('.git')
 
 def main():
     (opts, args) = parse_opts()
@@ -32,10 +40,20 @@ def main():
 
     gh = Github(opts.token)
 
-    org = gh.get_organization(opts.org)
-    team = org.get_team_by_slug(opts.team)
+    if os.path.isfile(opts.repos_file):
+        repos = []
+        with open(opts.repos_file, 'r') as f:
+            for line in f.readlines():
+                try:
+                    repos.append(gh.get_repo(sanitize(line)))
+                except Exception as ex:
+                    print(f'Failed to parse: {line}')
+                    sys.exit(1)
+    else:
+        org = gh.get_organization(opts.org)
+        repos = org.get_repos()
 
-    for repo in org.get_repos():
+    for repo in repos:
         skip_conditions = [
           repo.fork,
           repo.archived,
@@ -45,11 +63,18 @@ def main():
         if any(skip_conditions):
             continue
 
+        org = gh.get_organization(repo.organization.login)
+        try:
+            team = org.get_team_by_slug(opts.team)
+        except Exception as ex:
+            print(f'No "{opts.team}" team in "{org.login}" GH org.')
+            sys.exit(1)
+
         # Skip changing permissions if user is already there.
         if team in repo.get_teams():
             continue
 
-        print(' - %s' % repo.name)
+        print(' - %s/%s' % (repo.organization.login, repo.name))
         team.update_team_repository(repo, opts.perm)
 
 if __name__ == '__main__':
