@@ -40,7 +40,7 @@ def main():
 
     gh = Github(opts.token)
 
-    if os.path.isfile(opts.repos_file):
+    if opts.repos_file and os.path.isfile(opts.repos_file):
         repos = []
         with open(opts.repos_file, 'r') as f:
             for line in f.readlines():
