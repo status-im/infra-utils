@@ -48,7 +48,7 @@ class DiscourseAPI:
         r.raise_for_status()
         return r.json()
 
-    def list_new_users(self, start_page: int = 1, end_page: int = 10):
+    def list_new_users(self, start_page: int = 0, end_page: int = 3):
         page = start_page
         while page < end_page:
             for user in self.list_new_users_page(page):
