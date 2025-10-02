@@ -55,7 +55,7 @@ def main():
         LOG.debug(f'Query: {query}')
         issues.extend(
             {
-                'repo':     f'{issue.repository.organization.login}/{issue.repository.name}',
+                'url':      issue.html_url,
                 'number':   issue.number,
                 'title':    issue.title,
                 'assignee': issue.assignee.login,
