@@ -1,5 +1,5 @@
 #!/usr/bin/env nix-shell
-#!nix-shell -i python3 -p python310Packages.boto3
+#!nix-shell -i python3 -p python311Packages.boto3
 import os
 import re
 import boto3
