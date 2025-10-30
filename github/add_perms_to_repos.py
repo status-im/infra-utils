@@ -18,6 +18,8 @@ def parse_opts():
                       help='GitHub organization to search for repos to update.')
     parser.add_option('-t', '--team', default='devops',
                       help='GitHub team to grant access to all repos in given org.')
+    parser.add_option('-u', '--user',
+                      help='GitHub team to grant access to all repos in given org.')
     parser.add_option('-p', '--perm', default='pull',
                       help='Permission to give: pull, triage, push, maintain, admin')
     parser.add_option('-r', '--repos-file',
@@ -63,19 +65,22 @@ def main():
         if any(skip_conditions):
             continue
 
-        org = gh.get_organization(repo.organization.login)
-        try:
-            team = org.get_team_by_slug(opts.team)
-        except Exception as ex:
-            print(f'No "{opts.team}" team in "{org.login}" GH org.')
-            sys.exit(1)
-
-        # Skip changing permissions if user is already there.
-        if team in repo.get_teams():
-            continue
-
         print(' - %s/%s' % (repo.organization.login, repo.name))
-        team.update_team_repository(repo, opts.perm)
+        if opts.user:
+            repo.add_to_collaborators(opts.user, permission=opts.perm)
+        else:
+            org = gh.get_organization(repo.organization.login)
+            try:
+                team = org.get_team_by_slug(opts.team)
+            except Exception as ex:
+                print(f'No "{opts.team}" team in "{org.login}" GH org.')
+                sys.exit(1)
+
+            # Skip changing permissions if team is already there.
+            if team in repo.get_teams():
+                continue
+
+            team.update_team_repository(repo, opts.perm)
 
 if __name__ == '__main__':
     main()
