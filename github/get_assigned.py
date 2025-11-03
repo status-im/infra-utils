@@ -28,8 +28,10 @@ def parse_opts():
                       help='Names of user to query for.')
     parser.add_option('-U', '--updated', type='string', default=(datetime.now() - timedelta(days=30)).date(),
                       help='Time since which issue has been updated.')
-    parser.add_option('-u', '--user', type='string',
-                      help='Names of user to query for.')
+    parser.add_option('-a', '--assignee', type='string',
+                      help='Name assigned user to query for.')
+    parser.add_option('-A', '--author', type='string',
+                      help='Name author to query for.')
     parser.add_option('-T', '--github-token', default=os.environ.get('GH_TOKEN', None),
                       help='GitHub API token.')
     parser.add_option('-l', '--log-level', default='info',
@@ -49,21 +51,28 @@ def main():
 
     gh = Github(opts.github_token)
 
+    query = f'is:{opts.type} state:{opts.state} updated:>={opts.updated}'
+
+    if opts.assignee:
+        query += f' assignee:{opts.assignee}'
+    if opts.author:
+        query += f' author:{opts.author}'
+
     issues = []
     for org in opts.github_orgs:
-        query = f'is:{opts.type} org:{org} assignee:{opts.user} state:{opts.state} updated:>={opts.updated}'
-        LOG.debug(f'Query: {query}')
+        LOG.debug(f'Query: org:{org} {query}')
         issues.extend(
             {
                 'url':      issue.html_url,
                 'number':   issue.number,
                 'title':    issue.title,
-                'assignee': issue.assignee.login,
+                'author':   issue.author.login   if hasattr(issue, 'author')   else None,
+                'assignee': issue.assignee.login if hasattr(issue, 'assignee') else None,
                 'state':    issue.state,
                 'updated':  str(issue.updated_at.date()),
             }
             for issue
-            in gh.search_issues(query, sort='updated', order='desc')
+            in gh.search_issues(f'org:{org} {query}', sort='updated', order='desc')
         )
 
     print(json.dumps(issues, indent=2))
