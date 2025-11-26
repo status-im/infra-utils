@@ -66,8 +66,8 @@ def main():
                 'url':      issue.html_url,
                 'number':   issue.number,
                 'title':    issue.title,
-                'author':   issue.author.login   if hasattr(issue, 'author')   else None,
-                'assignee': issue.assignee.login if hasattr(issue, 'assignee') else None,
+                'author':   issue.author.login   if getattr(issue, 'author', None)   else None,
+                'assignee': issue.assignee.login if getattr(issue, 'assignee', None) else None,
                 'state':    issue.state,
                 'updated':  str(issue.updated_at.date()),
             }
