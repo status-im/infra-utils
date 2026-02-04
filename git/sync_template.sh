@@ -35,8 +35,7 @@ for DIR in $(ls -d ~/work/infra-*); do
     git checkout master
     git reset
     if git status -s >/dev/null; then
-        STASHED=1
-        git stash -u
+        git stash -u && STASHED=1
     fi
     git fetch --verbose origin $(git rev-parse --abbrev-ref HEAD)
     git rebase origin/$(git rev-parse --abbrev-ref HEAD)
@@ -54,7 +53,7 @@ for DIR in $(ls -d ~/work/infra-*); do
     fi
 
     if [[ "${STASHED}" -eq 1 ]]; then
-        git stash apply
+        git stash apply || echo "MERGE CONFLICTS!"
     fi
     popd >/dev/null
 done
