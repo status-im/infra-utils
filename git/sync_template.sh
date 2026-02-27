@@ -20,7 +20,7 @@ shift
 for DIR in $(ls -d ~/work/infra-*); do
     [[ "${DIR}" =~ .*/infra-role-.*$ ]] && continue
     [[ "${DIR}" =~ .*/infra-tf-.*$ ]] && continue
-    [[ "${DIR}" =~ .*/infra-(lido|utils|pass|docs|repos|template)$ ]] && continue
+    [[ "${DIR}" =~ .*/infra-(lido|ethctv|utils|pass|docs|repos|template)$ ]] && continue
     [[ -f "${DIR}/.envrc.secrets" ]] || continue
 
     echo "------------------------------------------------>>> ${DIR}"
