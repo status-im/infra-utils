@@ -6,7 +6,7 @@ import json
 import consul
 import logging
 import requests
-import CloudFlare
+import cloudflare
 # TODO: optparse is depricated
 from optparse import OptionParser
 from subprocess import Popen, PIPE
@@ -133,7 +133,7 @@ class DNSDiscovery:
 
 class CFManager:
     def __init__(self, email, token, domain):
-        self.client = CloudFlare.CloudFlare(email, token)
+        self.client = cloudflare.CloudFlare(email, token)
         zones = self.client.zones.get(params={'per_page':100})
         self.zone = next(z for z in zones if z['name'] == domain)
 
