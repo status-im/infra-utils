@@ -20,6 +20,8 @@ HELP_EXAMPLE='Example: ./dnsdisc.py -p 123abc -d nodes.example.org'
 log_format = '[%(levelname)s] %(message)s'
 logging.basicConfig(level=logging.INFO, format=log_format)
 LOG = logging.getLogger(__name__)
+# Quiet down Cloudflare module API calls logging
+logging.getLogger('httpx').setLevel(logging.ERROR)
 
 def parse_opts():
     parser = OptionParser(description=HELP_DESCRIPTION, epilog=HELP_EXAMPLE)
