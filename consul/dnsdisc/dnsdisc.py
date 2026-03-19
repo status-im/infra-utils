@@ -6,7 +6,7 @@ import json
 import consul
 import logging
 import requests
-import cloudflare
+from cloudflare import Cloudflare
 # TODO: optparse is depricated
 from optparse import OptionParser
 from subprocess import Popen, PIPE
@@ -25,8 +25,8 @@ def parse_opts():
     parser = OptionParser(description=HELP_DESCRIPTION, epilog=HELP_EXAMPLE)
     parser.add_option('-m', '--cf-email', default='jakub@status.im',
                       help='CloudFlare Account email. (default: %default)')
-    parser.add_option('-t', '--cf-token', default=os.environ.get('CF_TOKEN'),
-                      help='CloudFlare API token (env: CF_TOKEN). (default: %default)')
+    parser.add_option('-t', '--cf-api-key', default=os.environ.get('CF_API_KEY'),
+                      help='CloudFlare API key (env: CF_API_KEY). (default: %default)')
     parser.add_option('-D', '--cf-domain', default='status.im',
                       help='CloudFlare zone domain. (default: %default)')
     parser.add_option('-r', '--rpc-host', default='127.0.0.1',
@@ -49,7 +49,7 @@ def parse_opts():
                       help='Name of Consul service stage to query.')
     parser.add_option('-d', '--domain', type='string',
                       help='Fully qualified domain name for the tree root entry.')
-    parser.add_option('-C', '--tree-creator', default=HOME+'/work/nim-dnsdisc/build/tree_creator',
+    parser.add_option('-C', '--tree-creator', default=HOME+'/work/nim-dnsdisc/result/bin/tree_creator',
                       help='Path to tree_creator binary from nim-dnsdisc.')
     parser.add_option('-p', '--private-key', default=os.environ.get('PRIVATE_KEY'),
                       help='Tree creator private key as 64 char hex string.')
@@ -132,30 +132,24 @@ class DNSDiscovery:
 
 
 class CFManager:
-    def __init__(self, email, token, domain):
-        self.client = cloudflare.CloudFlare(email, token)
-        zones = self.client.zones.get(params={'per_page':100})
-        self.zone = next(z for z in zones if z['name'] == domain)
+    def __init__(self, email, api_key, domain):
+        self.client = Cloudflare(api_email=email, api_key=api_key)
+        self.zone = next(iter(self.client.zones.list(name=domain)))
 
     def txt_records(self, suffix):
         # Get currently existing records
-        records = self.client.zones.dns_records.get(
-            self.zone['id'], params={'type':'txt', 'per_page':1000}
-        )
+        records = self.client.dns.records.list(zone_id=self.zone.id, type='txt')
         # Match records only under selected domain.
-        return list(filter(
-            lambda r: r['name'].endswith(suffix), records
-        ))
+        return list(filter(lambda r: r.name.endswith(suffix), records))
 
     def delete(self, record_id):
-        return self.client.zones.dns_records.delete(
-            self.zone['id'], record_id
+        return self.client.dns.records.delete(
+            record_id, zone_id=self.zone.id
         )
 
     def create(self, name, content):
-        self.client.zones.dns_records.post(
-            self.zone['id'],
-            data={'name': name, 'content': content, 'type': 'TXT'}
+        self.client.dns.records.create(
+            zone_id=self.zone.id, name=name, content=content, type='TXT'
         )
 
 
@@ -197,11 +191,15 @@ def main():
             if x['ServiceID'] == opts.query_service_id
         ]
 
+    service_enrs = []
     for service in services:
         LOG.info('Service found: %s:%s', service['Node'], service['ServiceID'])
-        LOG.debug('Service ENR: %s', service['ServiceMeta']['node_enode'])
-
-    service_enrs = [s['ServiceMeta']['node_enode'] for s in services]
+        enr = service['ServiceMeta']['enr']
+        if enr.startswith('enr:'):
+            LOG.debug('Service ENR: %s', enr)
+            service_enrs.append(enr)
+        else:
+            LOG.error('Invalid ENR: %s', enr)
 
     LOG.debug('Using DNS tree creator: %s', opts.tree_creator)
     dns = DNSDiscovery(
@@ -217,13 +215,13 @@ def main():
         LOG.debug('New DNS Record: %s -> %s', record, value)
 
     LOG.debug('Connecting to CloudFlare: %s', opts.cf_email)
-    cf = CFManager(opts.cf_email, opts.cf_token, opts.cf_domain)
+    cf = CFManager(opts.cf_email, opts.cf_api_key, opts.cf_domain)
 
     LOG.debug('Querying TXT DNS records: %s', opts.domain)
     raw_old_records = cf.txt_records(opts.domain)
 
-    old_records_ids = {r['name']: r['id'] for r in raw_old_records}
-    old_records = set((r['name'], r['content']) for r in raw_old_records)
+    old_records_ids = {r.name: r.id for r in raw_old_records}
+    old_records = set((r.name, r.content) for r in raw_old_records)
     new_records = set((k.lower(), v) for k,v in new_records.items())
 
     # Delete records which changed or are gone.
