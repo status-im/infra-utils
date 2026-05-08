@@ -87,7 +87,7 @@ pipeline {
     always { script {
       nix.shell(
         'nix-store --optimize',
-        packages: ['nixVersions.nix_2_24'],
+        packages: ['nixVersions.nix_2_33'],
         pure: false
       )
     } }
