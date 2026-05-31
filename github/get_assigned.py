@@ -6,7 +6,7 @@ import json
 import logging
 from datetime import datetime, timedelta
 from optparse import OptionParser
-from github import Github, GithubException
+from github import Auth, Github, GithubException
 
 HELP_DESCRIPTION='Utility getting assigned issues and pull requests for user.'
 HELP_EXAMPLE='Example: ./get_assigned.py -o status-im -o logos-co -u jakubgs'
@@ -49,7 +49,7 @@ def main():
 
     LOG.setLevel(opts.log_level.upper())
 
-    gh = Github(opts.github_token)
+    gh = Github(auth=Auth.Token(opts.github_token))
 
     query = f'is:{opts.type} state:{opts.state} updated:>={opts.updated}'
 
