@@ -7,6 +7,9 @@ def defaulBuckets = [
   'status-im-mobile-prs',
   'status-im-desktop-prs',
   'status-im-prs',
+  'logos-app-builds',
+  'logos-app-nightlies',
+  'logos-app-prs'
 ]
 
 def parallelStagesMap = params.BUCKETS.split('\n').collectEntries {
