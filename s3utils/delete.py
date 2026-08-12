@@ -49,6 +49,9 @@ def main():
     objects = s3.get_paginator('list_objects_v2')
 
     for page in objects.paginate(Bucket=opts.bucket, MaxKeys=99999):
+        if 'Contents' not in page:
+            print('No files found in page!')
+            continue
         for obj in page['Contents']:
             name = obj['Key']
             modified = obj['LastModified']
