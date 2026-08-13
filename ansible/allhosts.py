@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-import sys
 import json
+import os
 import requests
+import sys
 from optparse import OptionParser
 
 HELP_DESCRIPTION = '''
@@ -24,11 +25,14 @@ def parse_opts():
                       help='Domain to append to hostnames.')
     parser.add_option('-u', '--consul-url', default='https://consul-api.infra.status.im:8400',
                       help='Name of virtual network interface.')
-    parser.add_option('-c', '--cert-chain', default='ansible/files/consul-ca.crt',
+    parser.add_option('-c', '--cert-chain',
+                      default=os.environ.get('CONSUL_CACERT', 'ansible/files/consul-ca.crt'),
                       help='Path to Consul certificate CA chain.')
-    parser.add_option('-p', '--cert-path', default='ansible/files/consul-client.crt',
+    parser.add_option('-p', '--cert-path',
+                      default=os.environ.get('CONSUL_CLIENT_CERT', 'ansible/files/consul-client.crt'),
                       help='Path to Consul certificate file')
-    parser.add_option('-k', '--cert-key', default='ansible/files/consul-client.key',
+    parser.add_option('-k', '--cert-key',
+                      default=os.environ.get('CONSUL_CLIENT_KEY', 'ansible/files/consul-client.key'),
                       help='Path to Consul certificate key file')
 
     return parser.parse_args()
