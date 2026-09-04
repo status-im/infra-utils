@@ -43,7 +43,7 @@ for DIR in $(ls -d ~/work/infra-*); do
 
     git checkout master
     git reset
-    if git status -s >/dev/null; then
+    if [[ -n "$(git status --porcelain)" ]]; then
         git stash -u && STASHED=1
     fi
     git fetch --verbose origin $(git rev-parse --abbrev-ref HEAD)
